@@ -15,7 +15,7 @@ export default async function AuthLayout({
   if (!user) redirect("/");
 
   return (
-    <div className="flex h-[100vh] flex-col justify-between text-[var(--text)]">
+    <div className="flex h-screen flex-col justify-between text-(--text)">
       <Header user={user} />
       <div className="flex-1 flex items-center justify-center">{children}</div>
       <Footer />

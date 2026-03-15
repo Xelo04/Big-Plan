@@ -41,7 +41,7 @@ export default function Header({ user }: { user: User | null }) {
   if (loading) return <LoadingPage />;
 
   return (
-    <header className="w-full px-4 py-3 border-b border-[var(--btn-border)] bg-[var(--bg)] text-[var(--text)]">
+    <header className="w-full px-4 py-3 border-b border-(--btn-border) bg-(--bg) text-(--text)">
       <div className="max-w-7xl mx-auto flex items-center justify-between">
         <Link href="/" className="text-lg font-semibold">
           Big Plan
