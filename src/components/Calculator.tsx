@@ -4,53 +4,53 @@ import { useState } from "react";
 import { Card, Button, Steps, Form, InputNumber, Tooltip } from "antd";
 import { InfoCircleOutlined } from "@ant-design/icons";
 import PortfolioMiniChart from "./PortfolioMiniChart";
+import Simulation from "./Simulation";
 import {
-  celInwestycyjnyZeSkladkiMiesiecznej,
   skladkaMiesieczna,
-  wartosciPortfela,
-} from "@/app/(public)/calculator";
+  stopaZwrotuInwestycjiRoczna,
+  wartosciPortfelaWyborPortfolio,
+} from "@/app/(public)/calculator/calculator";
+import averageData from "@/app/(public)/calculator/calculatorAverageData.json";
 
 const stepsItems = [
-  { title: "Wybierz" },
+  { title: "Wybór" },
   { title: "Dane osobowe" },
   { title: "Szczegóły" },
-  { title: "Podsumowanie" },
+  { title: "Symulacja" },
 ];
 
-type FormValues = {
-  yearsToRetirement: number;
+export type FormValues = {
+  currentAge: number;
   expectedDeathAge: number;
+  workEndAge: number;
+  statePensionAge: number;
   estimatedPension: number;
   monthlyNeed: number;
-  targetAmount: number;
-  monthlyContribution: number;
+  monthlyInvestment?: number;
 };
 
 export default function Calculator() {
   const [current, setCurrent] = useState(0);
-  const [mode, setMode] = useState<"goal" | "monthly" | null>(null);
   const [form] = Form.useForm();
+  const [knowsMonthlyAmount, setKnowsMonthlyAmount] = useState(false);
   const [formValues, setFormValues] = useState<FormValues>({
-    yearsToRetirement: 0,
+    currentAge: 0,
     expectedDeathAge: 0,
+    workEndAge: 0,
+    statePensionAge: 0,
     estimatedPension: 0,
     monthlyNeed: 0,
-    targetAmount: 0,
-    monthlyContribution: 0,
   });
   const [portfolio, setPortfolio] = useState<
-    "aggressive" | "defensive" | "allEquity" | null
+    "aggressive" | "defensive" | "allStocks" | null
   >(null);
+  const [startingMonthlyPayment, setStartingMonthlyPayment] =
+    useState<number>(0);
+  const [simIsLoading, setSimIsLoading] = useState(false);
 
   // * Nawigacja
   const next = () => setCurrent((c) => c + 1);
   const prev = () => setCurrent((c) => c - 1);
-
-  // * Logika kalkulatora
-  const chooseMode = (selected: "goal" | "monthly") => {
-    setMode(selected);
-    next();
-  };
 
   // * Formularz
   const allowIntegerOnly = (e: React.KeyboardEvent) => {
@@ -86,83 +86,114 @@ export default function Calculator() {
     e.preventDefault();
   };
 
+  // TODO Poprawić kiedy można kalkulować oraz jakie dane mogą być wpisane w jakie pola
+  const canCalcChart = formValues.monthlyNeed > 0;
+
+  // * Wybór portfolio
   const formatAmount = (value: number) =>
     new Intl.NumberFormat("pl-PL", { maximumFractionDigits: 0 }).format(value);
 
-  const canCalcChart =
-    (mode === "monthly" &&
-      formValues.yearsToRetirement > 0 &&
-      formValues.monthlyContribution > 0) ||
-    (mode === "goal" &&
-      formValues.yearsToRetirement > 0 &&
-      formValues.targetAmount > 0);
-
   const portfolioChartData = {
     aggressive: canCalcChart
-      ? wartosciPortfela(
-          0.6,
-          0.05,
-          0.4,
-          0.03,
-          formValues.yearsToRetirement,
-          mode === "monthly"
-            ? formValues.monthlyContribution
-            : skladkaMiesieczna(
-                0.6,
-                0.05,
-                0.4,
-                0.03,
-                formValues.yearsToRetirement,
-                formValues.targetAmount,
-              ),
-          true,
+      ? wartosciPortfelaWyborPortfolio(
+          formValues.monthlyNeed,
+          formValues.estimatedPension,
+          formValues.currentAge,
+          formValues.workEndAge,
+          formValues.statePensionAge,
+          formValues.expectedDeathAge,
+          averageData.stocksMonthly * 0.6 + averageData.bondsMonthly * 0.4,
+          averageData.inflationMonthly,
           true,
         )
       : [],
     defensive: canCalcChart
-      ? wartosciPortfela(
-          0.4,
-          0.05,
-          0.6,
-          0.03,
-          formValues.yearsToRetirement,
-          mode === "monthly"
-            ? formValues.monthlyContribution
-            : skladkaMiesieczna(
-                0.4,
-                0.05,
-                0.6,
-                0.03,
-                formValues.yearsToRetirement,
-                formValues.targetAmount,
-              ),
-          true,
+      ? wartosciPortfelaWyborPortfolio(
+          formValues.monthlyNeed,
+          formValues.estimatedPension,
+          formValues.currentAge,
+          formValues.workEndAge,
+          formValues.statePensionAge,
+          formValues.expectedDeathAge,
+          averageData.stocksMonthly * 0.4 + averageData.bondsMonthly * 0.6,
+          averageData.inflationMonthly,
           true,
         )
       : [],
-    allEquity: canCalcChart
-      ? wartosciPortfela(
-          1,
-          0.05,
-          0,
-          0.03,
-          formValues.yearsToRetirement,
-          mode === "monthly"
-            ? formValues.monthlyContribution
-            : skladkaMiesieczna(
-                1,
-                0.05,
-                0,
-                0.03,
-                formValues.yearsToRetirement,
-                formValues.targetAmount,
-              ),
-          true,
+    allStocks: canCalcChart
+      ? wartosciPortfelaWyborPortfolio(
+          formValues.monthlyNeed,
+          formValues.estimatedPension,
+          formValues.currentAge,
+          formValues.workEndAge,
+          formValues.statePensionAge,
+          formValues.expectedDeathAge,
+          averageData.stocksMonthly,
+          averageData.inflationMonthly,
           true,
         )
       : [],
   };
 
+  const portfolioPreviewMaxY = (() => {
+    const allValues = Object.values(portfolioChartData)
+      .flatMap((series) => series)
+      .map((point) => point.value);
+
+    const rawMax = allValues.length > 0 ? Math.max(...allValues) : 0;
+    return rawMax > 0 ? Math.ceil(rawMax * 1.05) : undefined;
+  })();
+
+  const portfolioMonthlyPaymentData = {
+    aggressive: canCalcChart
+      ? formatAmount(
+          skladkaMiesieczna(
+            formValues.monthlyNeed,
+            formValues.estimatedPension,
+            formValues.currentAge,
+            formValues.workEndAge,
+            formValues.statePensionAge,
+            formValues.expectedDeathAge,
+            stopaZwrotuInwestycjiRoczna(
+              averageData.stocksMonthly * 0.6 + averageData.bondsMonthly * 0.4,
+              averageData.inflationMonthly,
+            ),
+          ),
+        )
+      : 0,
+    defensive: canCalcChart
+      ? formatAmount(
+          skladkaMiesieczna(
+            formValues.monthlyNeed,
+            formValues.estimatedPension,
+            formValues.currentAge,
+            formValues.workEndAge,
+            formValues.statePensionAge,
+            formValues.expectedDeathAge,
+            stopaZwrotuInwestycjiRoczna(
+              averageData.stocksMonthly * 0.4 + averageData.bondsMonthly * 0.6,
+              averageData.inflationMonthly,
+            ),
+          ),
+        )
+      : 0,
+    allStocks: canCalcChart
+      ? formatAmount(
+          skladkaMiesieczna(
+            formValues.monthlyNeed,
+            formValues.estimatedPension,
+            formValues.currentAge,
+            formValues.workEndAge,
+            formValues.statePensionAge,
+            formValues.expectedDeathAge,
+            stopaZwrotuInwestycjiRoczna(
+              averageData.stocksMonthly,
+              averageData.inflationMonthly,
+            ),
+          ),
+        )
+      : 0,
+  };
   return (
     <div className="mx-10 p-6 flex-1 flex flex-col min-h-0">
       <div className="w-full max-w-3xl mx-auto mb-6">
@@ -171,36 +202,56 @@ export default function Calculator() {
 
       <div className="flex-1 flex items-center justify-center min-h-0">
         {current === 0 && (
-          <div className="flex flex-wrap gap-6 w-full justify-evenly">
-            <Card
-              hoverable
-              className={`w-full sm:w-80 cursor-pointer ${mode === "goal" ? "border-2 border-(--accent)" : ""}`}
-              bodyStyle={{ padding: 32 }}
-              onClick={() => chooseMode("goal")}
-            >
-              <div className="h-40 sm:h-40 flex flex-col justify-center items-start gap-2 px-2 sm:px-0">
-                <h3 className="text-lg font-semibold">Znam cel inwestycyjny</h3>
-                <p className="text-sm text-(--muted)">
-                  Określ kwotę docelową i czas.
-                </p>
-              </div>
-            </Card>
+          <div className="w-full max-w-5xl">
+            <div className="grid grid-cols-2 gap-5">
+              <button
+                type="button"
+                className="w-full min-h-56 cursor-pointer rounded-md border border-(--btn-border) p-7 text-left transition-colors duration-200 hover:border-(--cta-from) focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--accent)/30"
+                style={{
+                  background: "var(--card-background)",
+                  boxShadow: "var(--card-shadow)",
+                  backdropFilter: "var(--card-backdrop-filter)",
+                }}
+                onClick={() => {
+                  setKnowsMonthlyAmount(false);
+                  next();
+                }}
+              >
+                <div className="flex flex-col gap-3">
+                  <h4 className="text-lg font-semibold leading-snug text-(--text)">
+                    Znam kwotę potrzebną do przeżycia na emeryturze
+                  </h4>
+                  <p className="text-sm leading-relaxed text-(--muted)">
+                    Wyliczymy plan oszczędzania na podstawie potrzebnej kwoty
+                    miesięcznej.
+                  </p>
+                </div>
+              </button>
 
-            <Card
-              hoverable
-              className={`w-full sm:w-80 cursor-pointer ${mode === "monthly" ? "border-2 border-(--accent)" : ""}`}
-              bodyStyle={{ padding: 32 }}
-              onClick={() => chooseMode("monthly")}
-            >
-              <div className="h-40 sm:h-40 flex flex-col justify-center items-start gap-2 px-2 sm:px-0">
-                <h3 className="text-lg font-semibold">
-                  Znam miesięczną wpłatę
-                </h3>
-                <p className="text-sm text-(--muted)">
-                  Podaj ile możesz odkładać co miesiąc.
-                </p>
-              </div>
-            </Card>
+              <button
+                type="button"
+                className="w-full min-h-56 cursor-pointer rounded-md border border-(--btn-border) p-7 text-left transition-colors duration-200 hover:border-(--cta-from) focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--accent)/30"
+                style={{
+                  background: "var(--card-background)",
+                  boxShadow: "var(--card-shadow)",
+                  backdropFilter: "var(--card-backdrop-filter)",
+                }}
+                onClick={() => {
+                  setKnowsMonthlyAmount(true);
+                  next();
+                }}
+              >
+                <div className="flex flex-col gap-3">
+                  <h4 className="text-lg font-semibold leading-snug text-(--text)">
+                    Znam kwotę, którą chcę inwestować co miesiąc
+                  </h4>
+                  <p className="text-sm leading-relaxed text-(--muted)">
+                    Przejdziemy dalej, przyjmując stałą miesięczną wpłatę, oraz
+                    ocenimy, w jakim stopniu jest ona wystarczająca.
+                  </p>
+                </div>
+              </button>
+            </div>
           </div>
         )}
 
@@ -213,7 +264,7 @@ export default function Calculator() {
                 title={
                   "Wszystkie kwoty podawaj według wartości bieżącej pieniądza - nie uwzględniaj inflacji."
                 }
-                overlayStyle={{ maxWidth: 320, fontSize: 14 }}
+                styles={{ root: { maxWidth: 320, fontSize: 14 } }}
                 getPopupContainer={(trigger) =>
                   trigger?.parentElement || document.body
                 }
@@ -230,19 +281,59 @@ export default function Calculator() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <Form.Item
-                    name="yearsToRetirement"
-                    label="Lata do emerytury"
+                    name="currentAge"
+                    label="Obecny wiek"
                     rules={[
                       {
                         required: true,
-                        message: "Podaj liczbę lat do emerytury",
+                        message: "Podaj obecny wiek",
                       },
                     ]}
                   >
                     <InputNumber
                       min={0}
                       style={{ width: "100%" }}
-                      placeholder="np. 15"
+                      placeholder="np. 30"
+                      onKeyDown={allowIntegerOnly}
+                    />
+                  </Form.Item>
+                </div>
+
+                <div>
+                  <Form.Item
+                    name="workEndAge"
+                    label="Wiek zakończenia pracy"
+                    rules={[
+                      {
+                        required: true,
+                        message: "Podaj wiek zakończenia pracy",
+                      },
+                    ]}
+                  >
+                    <InputNumber
+                      min={0}
+                      style={{ width: "100%" }}
+                      placeholder="np. 60"
+                      onKeyDown={allowIntegerOnly}
+                    />
+                  </Form.Item>
+                </div>
+
+                <div>
+                  <Form.Item
+                    name="statePensionAge"
+                    label="Wiek przejścia na emeryturę państwową"
+                    rules={[
+                      {
+                        required: true,
+                        message: "Podaj wiek przejścia na emeryturę państwową",
+                      },
+                    ]}
+                  >
+                    <InputNumber
+                      min={0}
+                      style={{ width: "100%" }}
+                      placeholder="np. 65"
                       onKeyDown={allowIntegerOnly}
                     />
                   </Form.Item>
@@ -271,11 +362,11 @@ export default function Calculator() {
                 <div>
                   <Form.Item
                     name="estimatedPension"
-                    label={"Szacowana emerytura (miesięcznie)"}
+                    label={"Szacowana emerytura państwowa (miesięcznie)"}
                     rules={[
                       {
                         required: true,
-                        message: "Podaj szacowaną emeryturę",
+                        message: "Podaj szacowaną emeryturę państwową",
                       },
                     ]}
                   >
@@ -309,38 +400,22 @@ export default function Calculator() {
                   </Form.Item>
                 </div>
 
-                {mode === "goal" && (
+                {knowsMonthlyAmount && (
                   <div>
                     <Form.Item
-                      name="targetAmount"
-                      label={"Kwota docelowa"}
+                      name="monthlyInvestment"
+                      label="Miesięczna kwota inwestycji (PLN)"
                       rules={[
-                        { required: true, message: "Podaj kwotę docelową" },
+                        {
+                          required: true,
+                          message: "Podaj miesięczną kwotę inwestycji",
+                        },
                       ]}
                     >
                       <InputNumber
                         min={0}
                         style={{ width: "100%" }}
-                        placeholder="np. 200000"
-                        onKeyDown={allowDecimal}
-                      />
-                    </Form.Item>
-                  </div>
-                )}
-
-                {mode === "monthly" && (
-                  <div>
-                    <Form.Item
-                      name="monthlyContribution"
-                      label={"Miesięczna wpłata"}
-                      rules={[
-                        { required: true, message: "Podaj miesięczną wpłatę" },
-                      ]}
-                    >
-                      <InputNumber
-                        min={0}
-                        style={{ width: "100%" }}
-                        placeholder="np. 500"
+                        placeholder="np. 1000"
                         onKeyDown={allowDecimal}
                       />
                     </Form.Item>
@@ -355,16 +430,15 @@ export default function Calculator() {
                   onClick={() => {
                     form.validateFields().then((values) => {
                       setFormValues({
-                        yearsToRetirement: Number(
-                          values.yearsToRetirement ?? 0,
-                        ),
+                        currentAge: Number(values.currentAge ?? 0),
                         expectedDeathAge: Number(values.expectedDeathAge ?? 0),
+                        workEndAge: Number(values.workEndAge ?? 0),
+                        statePensionAge: Number(values.statePensionAge ?? 0),
                         estimatedPension: Number(values.estimatedPension ?? 0),
                         monthlyNeed: Number(values.monthlyNeed ?? 0),
-                        targetAmount: Number(values.targetAmount ?? 0),
-                        monthlyContribution: Number(
-                          values.monthlyContribution ?? 0,
-                        ),
+                        monthlyInvestment: values.monthlyInvestment
+                          ? Number(values.monthlyInvestment)
+                          : undefined,
                       });
                       next();
                     });
@@ -386,7 +460,7 @@ export default function Calculator() {
                 title={
                   "Przedstawione poniżej wykresy są poglądowe i mają charakter informatyczny"
                 }
-                overlayStyle={{ maxWidth: 320, fontSize: 14 }}
+                styles={{ root: { maxWidth: 320, fontSize: 14 } }}
                 getPopupContainer={(trigger) =>
                   trigger?.parentElement || document.body
                 }
@@ -403,9 +477,12 @@ export default function Calculator() {
               <Card
                 hoverable
                 className={`w-full cursor-pointer border border-(--btn-border) ${portfolio === "aggressive" ? "border-2 border-(--accent)" : ""}`}
-                bodyStyle={{ padding: 24 }}
+                styles={{ body: { padding: 24 } }}
                 onClick={() => {
                   setPortfolio("aggressive");
+                  setStartingMonthlyPayment(
+                    Number(portfolioMonthlyPaymentData.aggressive),
+                  );
                   next();
                 }}
               >
@@ -417,39 +494,14 @@ export default function Calculator() {
                   <PortfolioMiniChart
                     data={portfolioChartData.aggressive}
                     stroke="#f97316"
+                    yMax={portfolioPreviewMaxY}
                   />
                   <div className="mt-2 pt-2 border-t border-(--btn-border)">
                     <p className="text-xs text-(--muted)">
-                      {mode === "goal"
-                        ? "Wymagana składka miesięczna"
-                        : "Szacowany kapitał"}
+                      Szacowana miesięczna składka
                     </p>
                     <p className="text-base font-semibold text-(--accent)">
-                      {mode === "goal"
-                        ? `${formatAmount(
-                            Math.round(
-                              skladkaMiesieczna(
-                                0.6,
-                                0.05,
-                                0.4,
-                                0.03,
-                                formValues.yearsToRetirement,
-                                formValues.targetAmount,
-                              ),
-                            ),
-                          )} zł/mies.`
-                        : `${formatAmount(
-                            Math.round(
-                              celInwestycyjnyZeSkladkiMiesiecznej(
-                                0.6,
-                                0.05,
-                                0.4,
-                                0.03,
-                                formValues.yearsToRetirement,
-                                formValues.monthlyContribution,
-                              ),
-                            ),
-                          )} zł`}
+                      {portfolioMonthlyPaymentData.aggressive} zł
                     </p>
                   </div>
                 </div>
@@ -458,9 +510,12 @@ export default function Calculator() {
               <Card
                 hoverable
                 className={`w-full cursor-pointer border border-(--btn-border) ${portfolio === "defensive" ? "border-2 border-(--accent)" : ""}`}
-                bodyStyle={{ padding: 24 }}
+                styles={{ body: { padding: 24 } }}
                 onClick={() => {
                   setPortfolio("defensive");
+                  setStartingMonthlyPayment(
+                    Number(portfolioMonthlyPaymentData.defensive),
+                  );
                   next();
                 }}
               >
@@ -472,39 +527,14 @@ export default function Calculator() {
                   <PortfolioMiniChart
                     data={portfolioChartData.defensive}
                     stroke="#0ea5a4"
+                    yMax={portfolioPreviewMaxY}
                   />
                   <div className="mt-2 pt-2 border-t border-(--btn-border)">
                     <p className="text-xs text-(--muted)">
-                      {mode === "goal"
-                        ? "Wymagana składka miesięczna"
-                        : "Szacowany kapitał"}
+                      Szacowana miesięczna składka
                     </p>
                     <p className="text-base font-semibold text-(--accent)">
-                      {mode === "goal"
-                        ? `${formatAmount(
-                            Math.round(
-                              skladkaMiesieczna(
-                                0.4,
-                                0.05,
-                                0.6,
-                                0.03,
-                                formValues.yearsToRetirement,
-                                formValues.targetAmount,
-                              ),
-                            ),
-                          )} zł/mies.`
-                        : `${formatAmount(
-                            Math.round(
-                              celInwestycyjnyZeSkladkiMiesiecznej(
-                                0.4,
-                                0.05,
-                                0.6,
-                                0.03,
-                                formValues.yearsToRetirement,
-                                formValues.monthlyContribution,
-                              ),
-                            ),
-                          )} zł`}
+                      {portfolioMonthlyPaymentData.defensive} zł
                     </p>
                   </div>
                 </div>
@@ -512,10 +542,13 @@ export default function Calculator() {
 
               <Card
                 hoverable
-                className={`w-full cursor-pointer border border-(--btn-border) ${portfolio === "allEquity" ? "border-2 border-(--accent)" : ""}`}
-                bodyStyle={{ padding: 24 }}
+                className={`w-full cursor-pointer border border-(--btn-border) ${portfolio === "allStocks" ? "border-2 border-(--accent)" : ""}`}
+                styles={{ body: { padding: 24 } }}
                 onClick={() => {
-                  setPortfolio("allEquity");
+                  setPortfolio("allStocks");
+                  setStartingMonthlyPayment(
+                    Number(portfolioMonthlyPaymentData.allStocks),
+                  );
                   next();
                 }}
               >
@@ -523,41 +556,16 @@ export default function Calculator() {
                   <h4 className="font-semibold">Akcyjny</h4>
                   <p className="text-sm text-(--muted)">100% akcje</p>
                   <PortfolioMiniChart
-                    data={portfolioChartData.allEquity}
+                    data={portfolioChartData.allStocks}
                     stroke="#dc2626"
+                    yMax={portfolioPreviewMaxY}
                   />
                   <div className="mt-2 pt-2 border-t border-(--btn-border)">
                     <p className="text-xs text-(--muted)">
-                      {mode === "goal"
-                        ? "Wymagana składka miesięczna"
-                        : "Szacowany kapitał"}
+                      Szacowana miesięczna składka
                     </p>
                     <p className="text-base font-semibold text-(--accent)">
-                      {mode === "goal"
-                        ? `${formatAmount(
-                            Math.round(
-                              skladkaMiesieczna(
-                                1,
-                                0.05,
-                                0,
-                                0.03,
-                                formValues.yearsToRetirement,
-                                formValues.targetAmount,
-                              ),
-                            ),
-                          )} zł/mies.`
-                        : `${formatAmount(
-                            Math.round(
-                              celInwestycyjnyZeSkladkiMiesiecznej(
-                                1,
-                                0.05,
-                                0,
-                                0.03,
-                                formValues.yearsToRetirement,
-                                formValues.monthlyContribution,
-                              ),
-                            ),
-                          )} zł`}
+                      {portfolioMonthlyPaymentData.allStocks} zł
                     </p>
                   </div>
                 </div>
@@ -572,10 +580,31 @@ export default function Calculator() {
 
         {current === 3 && (
           <Card className="w-full">
-            <p>Podsumowanie i akcja końcowa.</p>
-            <div className="flex gap-2 justify-end mt-4">
-              <Button onClick={prev}>Wstecz</Button>
-              <Button type="primary">Zakończ</Button>
+            <div className="flex flex-col gap-1">
+              <div className="flex">
+                {!simIsLoading && <Button onClick={prev}>Wstecz</Button>}
+              </div>
+              <Simulation
+                formValues={formValues}
+                startingMonthlyPayment={startingMonthlyPayment}
+                portfolio={
+                  portfolio === "aggressive"
+                    ? {
+                        stocks: 60,
+                        bonds: 40,
+                      }
+                    : portfolio === "defensive"
+                      ? {
+                          stocks: 40,
+                          bonds: 60,
+                        }
+                      : {
+                          stocks: 100,
+                          bonds: 0,
+                        }
+                }
+                onLoadingChange={setSimIsLoading}
+              />
             </div>
           </Card>
         )}

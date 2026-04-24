@@ -14,6 +14,7 @@ import {
   Checkbox,
 } from "antd";
 import { GoogleOutlined } from "@ant-design/icons";
+import { getErrorMessage } from "@/src/lib/error-utils";
 
 const { Title } = Typography;
 
@@ -33,61 +34,82 @@ export default function SignUpPage() {
   }) {
     setLoading(true);
 
-    const { error } = await authClient.signUp.email({
-      name: values.name,
-      email: values.email,
-      password: values.password,
-      wants_newsletter: values.wants_newsletter,
-      callbackURL: "/dashboard",
-    });
+    try {
+      const { error } = await authClient.signUp.email({
+        name: values.name,
+        email: values.email,
+        password: values.password,
+        wants_newsletter: values.wants_newsletter,
+        callbackURL: "/dashboard",
+      });
 
-    setLoading(false);
-
-    if (error) {
-      if (error.code === "USER_ALREADY_EXISTS_USE_ANOTHER_EMAIL") {
-        notification.error({
-          title: "Rejestracja nie powiodła się",
-          description:
-            "Użytkownik o podanym emailu już istnieje.\n Spróbuj ponownie.",
-          duration: 5,
-        });
+      if (error) {
+        if (error.code === "USER_ALREADY_EXISTS_USE_ANOTHER_EMAIL") {
+          notification.error({
+            title: "Rejestracja nie powiodła się",
+            description:
+              "Użytkownik o podanym emailu już istnieje.\n Spróbuj ponownie.",
+            duration: 5,
+          });
+        } else {
+          notification.error({
+            title: "Rejestracja nie powiodła się",
+            description:
+              "Wystąpił nieoczekiwany błąd. Skontaktuj się z administratorem, jeśli problem będzie się powtarzał.",
+          });
+        }
       } else {
+        router.push("/dashboard");
+        notification.success({
+          title: "Zarejestrowano pomyślnie",
+        });
+
+        await fetch("/api/user/email", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email: values.email }),
+        });
+
+        router.push("/verify-email");
+      }
+    } catch (error) {
+      notification.error({
+        title: "Rejestracja nie powiodła się",
+        description: getErrorMessage(
+          error,
+          "Wystąpił nieoczekiwany błąd. Skontaktuj się z administratorem, jeśli problem będzie się powtarzał.",
+        ),
+      });
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function handleGoogleSignUp() {
+    setLoadingGoogle(true);
+    try {
+      const { error } = await authClient.signIn.social({
+        provider: "google",
+        callbackURL: "/dashboard",
+      });
+
+      if (error) {
         notification.error({
           title: "Rejestracja nie powiodła się",
           description:
             "Wystąpił nieoczekiwany błąd. Skontaktuj się z administratorem, jeśli problem będzie się powtarzał.",
         });
       }
-    } else {
-      router.push("/dashboard");
-      notification.success({
-        title: "Zarejestrowano pomyślnie",
-      });
-
-      await fetch("/api/user/email", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: values.email }),
-      });
-
-      router.push("/verify-email");
-    }
-  }
-
-  async function handleGoogleSignUp() {
-    setLoadingGoogle(true);
-    const { error } = await authClient.signIn.social({
-      provider: "google",
-      callbackURL: "/dashboard",
-    });
-    setLoadingGoogle(false);
-
-    if (error) {
+    } catch (error) {
       notification.error({
         title: "Rejestracja nie powiodła się",
-        description:
+        description: getErrorMessage(
+          error,
           "Wystąpił nieoczekiwany błąd. Skontaktuj się z administratorem, jeśli problem będzie się powtarzał.",
+        ),
       });
+    } finally {
+      setLoadingGoogle(false);
     }
   }
 
@@ -181,7 +203,7 @@ export default function SignUpPage() {
                     return Promise.resolve();
                   }
                   return Promise.reject(
-                    new Error("Hasła, które wpisałeś, nie są takie same")
+                    new Error("Hasła, które wpisałeś, nie są takie same"),
                   );
                 },
               }),

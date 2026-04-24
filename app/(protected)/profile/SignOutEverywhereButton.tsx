@@ -7,6 +7,7 @@ import { Button } from "antd";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { LogoutOutlined } from "@ant-design/icons";
+import { getErrorMessage } from "@/src/lib/error-utils";
 
 export default function SignOutEverywhereButton() {
   const notification = useNotify();
@@ -16,21 +17,31 @@ export default function SignOutEverywhereButton() {
 
   async function handleLogoutEverywhere() {
     setLoading(true);
-    const { error } = await authClient.revokeSessions();
+    try {
+      const { error } = await authClient.revokeSessions();
 
-    if (error) {
-      setLoading(false);
+      if (error) {
+        notification.error({
+          title: "Wylogowanie ze wszystkich urządzeń nie powiodło się",
+          description:
+            "Wystąpił nieoczekiwany błąd. Skontaktuj się z administratorem, jeśli problem będzie się powtarzał.",
+        });
+      } else {
+        router.push("/sign-in");
+        notification.success({
+          title: "Poprawnie wylogowano ze wszystkich urządzeń.",
+        });
+      }
+    } catch (error) {
       notification.error({
         title: "Wylogowanie ze wszystkich urządzeń nie powiodło się",
-        description:
+        description: getErrorMessage(
+          error,
           "Wystąpił nieoczekiwany błąd. Skontaktuj się z administratorem, jeśli problem będzie się powtarzał.",
+        ),
       });
-    } else {
-      router.push("/sign-in");
+    } finally {
       setLoading(false);
-      notification.success({
-        title: "Poprawnie wylogowano ze wszystkich urządzeń.",
-      });
     }
   }
 

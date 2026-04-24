@@ -11,11 +11,6 @@ import {
 } from "recharts";
 import { RechartsDevtools } from "@recharts/devtools";
 import { Typography } from "antd";
-import {
-  celInwestycyjnyZeSkladkiMiesiecznej,
-  skladkaMiesieczna,
-  wartosciPortfela,
-} from "./calculator";
 
 const { Title } = Typography;
 
@@ -64,33 +59,6 @@ export default function WelcomePage() {
       amt: 2100,
     },
   ];
-
-  // console.log("Cel Inwestycyjny: ", celInwestycyjny());
-  // console.log("Składka roczna: ", skladkaRoczna());
-  // console.log("Składka miesięczna: ", skladkaMiesieczna());
-  console.log(
-    "Cel inwestycyjny ze składki miesięcznej: ",
-    celInwestycyjnyZeSkladkiMiesiecznej(
-      1,
-      0.05,
-      0,
-      0.03,
-      35,
-      229.2789168618616,
-    ),
-  );
-  console.log(
-    "Wartości portfela co miesiąc: ",
-    wartosciPortfela(1, 0.05, 0, 0.03, 35, 229.2789168618616),
-  );
-  console.log(
-    "Wartości portfela co rok: ",
-    wartosciPortfela(1, 0.05, 0, 0.03, 35, 229.2789168618616, true),
-  );
-  console.log(
-    "skladkaMiesieczna: ",
-    skladkaMiesieczna(1, 0.05, 0, 0.03, 35, 261567.38256215112),
-  );
 
   return (
     <section className="max-w-full h-full flex flex-col items-center justify-center mx-auto p-4 sm:p-6">

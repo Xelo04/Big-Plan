@@ -6,6 +6,7 @@ import { useState } from "react";
 import { Form, Input, Button, Typography, Card } from "antd";
 import { LockOutlined } from "@ant-design/icons";
 import SignOutEverywhereButton from "./SignOutEverywhereButton";
+import { getErrorMessage } from "@/src/lib/error-utils";
 
 const { Title } = Typography;
 
@@ -21,24 +22,34 @@ export default function ChangePasswordForm() {
   }) {
     setLoading(true);
 
-    const { error } = await authClient.changePassword({
-      currentPassword: values.currentPassword,
-      newPassword: values.newPassword,
-      revokeOtherSessions: true,
-    });
+    try {
+      const { error } = await authClient.changePassword({
+        currentPassword: values.currentPassword,
+        newPassword: values.newPassword,
+        revokeOtherSessions: true,
+      });
 
-    setLoading(false);
-
-    if (error) {
+      if (error) {
+        notification.error({
+          title: "Zmiana hasła nie powiodła się",
+          description:
+            "Wystąpił nieoczekiwany błąd. Skontaktuj się z administratorem, jeśli problem będzie się powtarzał.",
+        });
+      } else {
+        notification.success({
+          title: "Poprawnie zmieniono hasło.",
+        });
+      }
+    } catch (error) {
       notification.error({
         title: "Zmiana hasła nie powiodła się",
-        description:
+        description: getErrorMessage(
+          error,
           "Wystąpił nieoczekiwany błąd. Skontaktuj się z administratorem, jeśli problem będzie się powtarzał.",
+        ),
       });
-    } else {
-      notification.success({
-        title: "Poprawnie zmieniono hasło.",
-      });
+    } finally {
+      setLoading(false);
     }
   }
 

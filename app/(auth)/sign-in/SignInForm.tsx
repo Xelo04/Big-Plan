@@ -14,6 +14,7 @@ import {
   Checkbox,
 } from "antd";
 import { GoogleOutlined } from "@ant-design/icons";
+import { getErrorMessage } from "@/src/lib/error-utils";
 
 const { Title } = Typography;
 
@@ -31,63 +32,85 @@ export default function SignInPage() {
   }) {
     setLoading(true);
 
-    const { error } = await authClient.signIn.email({
-      email: values.email,
-      password: values.password,
-      rememberMe: values.rememberMe,
-    });
-    setLoading(false);
+    try {
+      const { error } = await authClient.signIn.email({
+        email: values.email,
+        password: values.password,
+        rememberMe: values.rememberMe,
+      });
 
-    if (error) {
-      if (error.code === "INVALID_EMAIL_OR_PASSWORD") {
-        notification.error({
-          title: "Logowanie nie powiodło się",
-          description: "Nieprawidłowy email lub hasło.\n Spróbuj ponownie.",
-        });
-      } else if (error.code === "EMAIL_NOT_VERIFIED") {
-        notification.error({
-          title: "Logowanie nie powiodło się",
-          description:
-            "Twój email nie został zweryfikowany.\n Sprawdź pocztę lub wyślij e-mail ponownie.",
-          duration: 8,
-        });
+      if (error) {
+        if (error.code === "INVALID_EMAIL_OR_PASSWORD") {
+          notification.error({
+            title: "Logowanie nie powiodło się",
+            description: "Nieprawidłowy email lub hasło.\n Spróbuj ponownie.",
+          });
+        } else if (error.code === "EMAIL_NOT_VERIFIED") {
+          notification.error({
+            title: "Logowanie nie powiodło się",
+            description:
+              "Twój email nie został zweryfikowany.\n Sprawdź pocztę lub wyślij e-mail ponownie.",
+            duration: 8,
+          });
 
-        await fetch("/api/user/email", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email: values.email }),
-        });
+          await fetch("/api/user/email", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ email: values.email }),
+          });
 
-        router.push("/verify-email");
+          router.push("/verify-email");
+        } else {
+          notification.error({
+            title: "Logowanie nie powiodło się",
+            description:
+              "Wystąpił nieoczekiwany błąd. Skontaktuj się z administratorem, jeśli problem będzie się powtarzał.",
+          });
+        }
       } else {
+        router.push("/dashboard");
+        notification.success({
+          title: "Zalogowano pomyślnie",
+        });
+      }
+    } catch (error) {
+      notification.error({
+        title: "Logowanie nie powiodło się",
+        description: getErrorMessage(
+          error,
+          "Wystąpił nieoczekiwany błąd. Skontaktuj się z administratorem, jeśli problem będzie się powtarzał.",
+        ),
+      });
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function handleGoogleSignIn() {
+    setLoadingGoogle(true);
+    try {
+      const { error } = await authClient.signIn.social({
+        provider: "google",
+        callbackURL: "/dashboard",
+      });
+
+      if (error) {
         notification.error({
           title: "Logowanie nie powiodło się",
           description:
             "Wystąpił nieoczekiwany błąd. Skontaktuj się z administratorem, jeśli problem będzie się powtarzał.",
         });
       }
-    } else {
-      router.push("/dashboard");
-      notification.success({
-        title: "Zalogowano pomyślnie",
-      });
-    }
-  }
-
-  async function handleGoogleSignIn() {
-    setLoadingGoogle(true);
-    const { error } = await authClient.signIn.social({
-      provider: "google",
-      callbackURL: "/dashboard",
-    });
-    setLoadingGoogle(false);
-
-    if (error) {
+    } catch (error) {
       notification.error({
         title: "Logowanie nie powiodło się",
-        description:
+        description: getErrorMessage(
+          error,
           "Wystąpił nieoczekiwany błąd. Skontaktuj się z administratorem, jeśli problem będzie się powtarzał.",
+        ),
       });
+    } finally {
+      setLoadingGoogle(false);
     }
   }
 

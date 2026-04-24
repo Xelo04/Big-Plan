@@ -5,6 +5,7 @@ import { authClient } from "@/src/lib/auth-client";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Form, Input, Button, Typography } from "antd";
+import { getErrorMessage } from "@/src/lib/error-utils";
 
 const { Title } = Typography;
 
@@ -22,25 +23,35 @@ export default function ResetPasswordForm({ token }: ResetPasswordFormProps) {
   async function handleSubmit(values: { password: string }) {
     setLoading(true);
 
-    const { error } = await authClient.resetPassword({
-      newPassword: values.password,
-      token,
-    });
+    try {
+      const { error } = await authClient.resetPassword({
+        newPassword: values.password,
+        token,
+      });
 
-    setLoading(false);
-
-    if (error) {
+      if (error) {
+        notification.error({
+          title: "Reset hasła nie powiódł się",
+          description:
+            "Wystąpił nieoczekiwany błąd. Skontaktuj się z administratorem, jeśli problem będzie się powtarzał.",
+        });
+      } else {
+        notification.success({
+          title:
+            "Poprawnie zresetowano hasło. Trwa przekierowanie do strony logowania...",
+        });
+        setTimeout(() => router.push("/sign-in"), 3000);
+      }
+    } catch (error) {
       notification.error({
         title: "Reset hasła nie powiódł się",
-        description:
+        description: getErrorMessage(
+          error,
           "Wystąpił nieoczekiwany błąd. Skontaktuj się z administratorem, jeśli problem będzie się powtarzał.",
+        ),
       });
-    } else {
-      notification.success({
-        title:
-          "Poprawnie zresetowano hasło. Trwa przekierowanie do strony logowania...",
-      });
-      setTimeout(() => router.push("/sign-in"), 3000);
+    } finally {
+      setLoading(false);
     }
   }
 
@@ -108,7 +119,7 @@ export default function ResetPasswordForm({ token }: ResetPasswordFormProps) {
                     return Promise.resolve();
                   }
                   return Promise.reject(
-                    new Error("Hasła, które wpisałeś, nie są takie same")
+                    new Error("Hasła, które wpisałeś, nie są takie same"),
                   );
                 },
               }),

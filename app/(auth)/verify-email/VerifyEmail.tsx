@@ -4,6 +4,7 @@ import { authClient } from "@/src/lib/auth-client";
 import { useState } from "react";
 import { Button, Typography } from "antd";
 import { useNotify } from "@/src/components/NotificationProvider";
+import { getErrorMessage } from "@/src/lib/error-utils";
 
 const { Title, Text } = Typography;
 
@@ -18,25 +19,36 @@ export default function VerifyEmail({ email }: VerifyEmailProps) {
 
   async function resendVerificationEmail() {
     setLoading(true);
-    const { error } = await authClient.sendVerificationEmail({
-      email,
-      callbackURL: "/email-verified",
-    });
-    setLoading(false);
+    try {
+      const { error } = await authClient.sendVerificationEmail({
+        email,
+        callbackURL: "/email-verified",
+      });
 
-    if (error) {
+      if (error) {
+        notification.error({
+          title: "Wysłanie e-maila weryfikacyjnego nie powiodło się",
+          description:
+            "Wystąpił nieoczekiwany błąd. Skontaktuj się z administratorem, jeśli problem będzie się powtarzał.",
+        });
+      } else {
+        notification.success({
+          title: "Wysłanie e-maila weryfikacyjnego powiodło się",
+          description:
+            "E-mail weryfikacyjny został wysłany ponownie. Sprawdź swoją skrzynkę odbiorczą.",
+          duration: 7,
+        });
+      }
+    } catch (error) {
       notification.error({
         title: "Wysłanie e-maila weryfikacyjnego nie powiodło się",
-        description:
+        description: getErrorMessage(
+          error,
           "Wystąpił nieoczekiwany błąd. Skontaktuj się z administratorem, jeśli problem będzie się powtarzał.",
+        ),
       });
-    } else {
-      notification.success({
-        title: "Wysłanie e-maila weryfikacyjnego powiodło się",
-        description:
-          "E-mail weryfikacyjny został wysłany ponownie. Sprawdź swoją skrzynkę odbiorczą.",
-        duration: 7,
-      });
+    } finally {
+      setLoading(false);
     }
   }
 

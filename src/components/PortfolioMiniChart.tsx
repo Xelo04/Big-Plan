@@ -18,11 +18,13 @@ type PortfolioMiniChartPoint = {
 type PortfolioMiniChartProps = {
   data: PortfolioMiniChartPoint[];
   stroke: string;
+  yMax?: number;
 };
 
 export default function PortfolioMiniChart({
   data,
   stroke,
+  yMax,
 }: PortfolioMiniChartProps) {
   const formatValue = (value: number) =>
     new Intl.NumberFormat("pl-PL", {
@@ -55,6 +57,7 @@ export default function PortfolioMiniChart({
             width={58}
             allowDecimals={false}
             tickCount={4}
+            domain={[0, yMax ?? "auto"]}
           />
           <RechartsTooltip
             formatter={(value) => [

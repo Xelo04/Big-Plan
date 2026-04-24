@@ -5,6 +5,7 @@ import { authClient } from "@/src/lib/auth-client";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Form, Input, Button, Typography } from "antd";
+import { getErrorMessage } from "@/src/lib/error-utils";
 
 const { Title } = Typography;
 
@@ -18,25 +19,35 @@ export default function ForgotPasswordForm() {
   async function handleSubmit({ email }: { email: string }) {
     setLoading(true);
 
-    const { error } = await authClient.requestPasswordReset({
-      email,
-      redirectTo: "/reset-password",
-    });
+    try {
+      const { error } = await authClient.requestPasswordReset({
+        email,
+        redirectTo: "/reset-password",
+      });
 
-    setLoading(false);
-
-    if (error) {
+      if (error) {
+        notification.error({
+          title: "Nie udało się wysłać e-maila do resetowania hasła",
+          description:
+            "Wystąpił nieoczekiwany błąd. Skontaktuj się z administratorem, jeśli problem będzie się powtarzał.",
+        });
+      } else {
+        notification.success({
+          title:
+            "E-mail do resetowania hasła został wysłany. Sprawdź swoją skrzynkę odbiorczą.",
+        });
+        setTimeout(() => router.push("/sign-in"), 3500);
+      }
+    } catch (error) {
       notification.error({
         title: "Nie udało się wysłać e-maila do resetowania hasła",
-        description:
+        description: getErrorMessage(
+          error,
           "Wystąpił nieoczekiwany błąd. Skontaktuj się z administratorem, jeśli problem będzie się powtarzał.",
+        ),
       });
-    } else {
-      notification.success({
-        title:
-          "E-mail do resetowania hasła został wysłany. Sprawdź swoją skrzynkę odbiorczą.",
-      });
-      setTimeout(() => router.push("/sign-in"), 3500);
+    } finally {
+      setLoading(false);
     }
   }
 
