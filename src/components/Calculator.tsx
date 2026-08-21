@@ -1,8 +1,14 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Card, Button, Steps, Form, InputNumber, Tooltip } from "antd";
-import { InfoCircleOutlined } from "@ant-design/icons";
+import {
+  CheckOutlined,
+  CloudUploadOutlined,
+  InfoCircleOutlined,
+  LockOutlined,
+} from "@ant-design/icons";
+import { useRouter } from "next/navigation";
 import PortfolioMiniChart from "./PortfolioMiniChart";
 import Simulation from "./Simulation";
 import {
@@ -11,6 +17,11 @@ import {
   wartosciPortfelaWyborPortfolio,
 } from "@/app/(public)/calculator/calculator";
 import averageData from "@/app/(public)/calculator/calculatorAverageData.json";
+import {
+  savePendingSimulation,
+  type PendingSimulation,
+  type PendingSimulationResults,
+} from "@/src/lib/pending-simulation";
 
 const stepsItems = [
   { title: "Wybór" },
@@ -29,10 +40,13 @@ export type FormValues = {
   monthlyInvestment?: number;
 };
 
+type PortfolioType = "aggressive" | "defensive" | "allStocks";
+
 export default function Calculator() {
+  const router = useRouter();
   const [current, setCurrent] = useState(0);
   const [form] = Form.useForm();
-  const [knowsMonthlyAmount, setKnowsMonthlyAmount] = useState(false);
+  const [knowsMonthlyAmount, setKnowsMonthlyAmount] = useState<boolean>(false);
   const [formValues, setFormValues] = useState<FormValues>({
     currentAge: 0,
     expectedDeathAge: 0,
@@ -41,18 +55,54 @@ export default function Calculator() {
     estimatedPension: 0,
     monthlyNeed: 0,
   });
-  const [portfolio, setPortfolio] = useState<
-    "aggressive" | "defensive" | "allStocks" | null
-  >(null);
+  const [portfolio, setPortfolio] = useState<PortfolioType | null>(null);
   const [startingMonthlyPayment, setStartingMonthlyPayment] =
     useState<number>(0);
   const [simIsLoading, setSimIsLoading] = useState(false);
+  const [saveModalOpen, setSaveModalOpen] = useState(false);
+  const [simulationReady, setSimulationReady] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [justSaved, setJustSaved] = useState(false);
+  const [currentResults, setCurrentResults] =
+    useState<PendingSimulationResults | null>(null);
 
-  // * Nawigacja
+  useEffect(() => {
+    fetch("/api/auth/get-session", { credentials: "include" })
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (data?.session?.userId) {
+          setIsLoggedIn(true);
+        }
+      })
+      .catch(() => {});
+  }, []);
+
+  const handleSimulationReady = useCallback((ready: boolean) => {
+    setSimulationReady(ready);
+    if (!ready) {
+      setJustSaved(false);
+    }
+  }, []);
+
+  const handleSaveModalClose = useCallback(() => {
+    setSaveModalOpen(false);
+  }, []);
+
+  const handleSaved = useCallback(() => {
+    setJustSaved(true);
+    setSaveModalOpen(false);
+  }, []);
+
+  const handleSimulationResults = useCallback(
+    (results: PendingSimulationResults) => {
+      setCurrentResults(results);
+    },
+    [],
+  );
+
   const next = () => setCurrent((c) => c + 1);
   const prev = () => setCurrent((c) => c - 1);
 
-  // * Formularz
   const allowIntegerOnly = (e: React.KeyboardEvent) => {
     const allowed = [
       "Backspace",
@@ -86,10 +136,8 @@ export default function Calculator() {
     e.preventDefault();
   };
 
-  // TODO Poprawić kiedy można kalkulować oraz jakie dane mogą być wpisane w jakie pola
   const canCalcChart = formValues.monthlyNeed > 0;
 
-  // * Wybór portfolio
   const formatAmount = (value: number) =>
     new Intl.NumberFormat("pl-PL", { maximumFractionDigits: 0 }).format(value);
 
@@ -139,7 +187,6 @@ export default function Calculator() {
     const allValues = Object.values(portfolioChartData)
       .flatMap((series) => series)
       .map((point) => point.value);
-
     const rawMax = allValues.length > 0 ? Math.max(...allValues) : 0;
     return rawMax > 0 ? Math.ceil(rawMax * 1.05) : undefined;
   })();
@@ -194,6 +241,27 @@ export default function Calculator() {
         )
       : 0,
   };
+
+  const handleSaveClick = () => {
+    if (!isLoggedIn) {
+      // Zapisz stan do sessionStorage żeby po loginie/rejestracji zapisać w bazie
+      if (currentResults && portfolio) {
+        const pending: PendingSimulation = {
+          formValues,
+          knowsMonthlyAmount,
+          portfolioType: portfolio,
+          startingMonthlyPayment,
+          results: currentResults,
+          savedAt: Date.now(),
+        };
+        savePendingSimulation(pending);
+      }
+      router.push("/sign-in");
+      return;
+    }
+    setSaveModalOpen(true);
+  };
+
   return (
     <div className="mx-10 p-6 flex-1 flex flex-col min-h-0">
       <div className="w-full max-w-3xl mx-auto mb-6">
@@ -201,6 +269,7 @@ export default function Calculator() {
       </div>
 
       <div className="flex-1 flex items-center justify-center min-h-0">
+        {/* --- KROK 0 --- */}
         {current === 0 && (
           <div className="w-full max-w-5xl">
             <div className="grid grid-cols-2 gap-5">
@@ -255,15 +324,14 @@ export default function Calculator() {
           </div>
         )}
 
+        {/* --- KROK 1 --- */}
         {current === 1 && (
           <Card
             title="Podaj dane osobowe"
             className="w-full max-w-4xl"
             extra={
               <Tooltip
-                title={
-                  "Wszystkie kwoty podawaj według wartości bieżącej pieniądza - nie uwzględniaj inflacji."
-                }
+                title="Wszystkie kwoty podawaj według wartości bieżącej pieniądza - nie uwzględniaj inflacji."
                 styles={{ root: { maxWidth: 320, fontSize: 14 } }}
                 getPopupContainer={(trigger) =>
                   trigger?.parentElement || document.body
@@ -272,154 +340,125 @@ export default function Calculator() {
                 <InfoCircleOutlined
                   style={{ fontSize: 20 }}
                   className="cursor-pointer"
-                  aria-label="Informacja"
                 />
               </Tooltip>
             }
           >
             <Form form={form} layout="vertical" initialValues={{}}>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <Form.Item
-                    name="currentAge"
-                    label="Obecny wiek"
-                    rules={[
-                      {
-                        required: true,
-                        message: "Podaj obecny wiek",
-                      },
-                    ]}
-                  >
-                    <InputNumber
-                      min={0}
-                      style={{ width: "100%" }}
-                      placeholder="np. 30"
-                      onKeyDown={allowIntegerOnly}
-                    />
-                  </Form.Item>
-                </div>
-
-                <div>
-                  <Form.Item
-                    name="workEndAge"
-                    label="Wiek zakończenia pracy"
-                    rules={[
-                      {
-                        required: true,
-                        message: "Podaj wiek zakończenia pracy",
-                      },
-                    ]}
-                  >
-                    <InputNumber
-                      min={0}
-                      style={{ width: "100%" }}
-                      placeholder="np. 60"
-                      onKeyDown={allowIntegerOnly}
-                    />
-                  </Form.Item>
-                </div>
-
-                <div>
-                  <Form.Item
-                    name="statePensionAge"
-                    label="Wiek przejścia na emeryturę państwową"
-                    rules={[
-                      {
-                        required: true,
-                        message: "Podaj wiek przejścia na emeryturę państwową",
-                      },
-                    ]}
-                  >
-                    <InputNumber
-                      min={0}
-                      style={{ width: "100%" }}
-                      placeholder="np. 65"
-                      onKeyDown={allowIntegerOnly}
-                    />
-                  </Form.Item>
-                </div>
-
-                <div>
-                  <Form.Item
-                    name="expectedDeathAge"
-                    label="Przewidywany wiek śmierci"
-                    rules={[
-                      {
-                        required: true,
-                        message: "Podaj przewidywany wiek śmierci",
-                      },
-                    ]}
-                  >
-                    <InputNumber
-                      min={0}
-                      style={{ width: "100%" }}
-                      placeholder="np. 85"
-                      onKeyDown={allowIntegerOnly}
-                    />
-                  </Form.Item>
-                </div>
-
-                <div>
-                  <Form.Item
-                    name="estimatedPension"
-                    label={"Szacowana emerytura państwowa (miesięcznie)"}
-                    rules={[
-                      {
-                        required: true,
-                        message: "Podaj szacowaną emeryturę państwową",
-                      },
-                    ]}
-                  >
-                    <InputNumber
-                      style={{ width: "100%" }}
-                      min={0}
-                      placeholder="np. 3000"
-                      onKeyDown={allowDecimal}
-                    />
-                  </Form.Item>
-                </div>
-
-                <div>
-                  <Form.Item
-                    name="monthlyNeed"
-                    label="Kwota potrzebna na przeżycie na emeryturze (miesięcznie)"
-                    rules={[
-                      {
-                        required: true,
-                        message:
-                          "Podaj kwotę potrzebną miesięcznie na emeryturze",
-                      },
-                    ]}
-                  >
-                    <InputNumber
-                      min={0}
-                      style={{ width: "100%" }}
-                      placeholder="np. 4000"
-                      onKeyDown={allowDecimal}
-                    />
-                  </Form.Item>
-                </div>
-
+                <Form.Item
+                  name="currentAge"
+                  label="Obecny wiek"
+                  rules={[{ required: true, message: "Podaj obecny wiek" }]}
+                >
+                  <InputNumber
+                    min={0}
+                    style={{ width: "100%" }}
+                    placeholder="np. 30"
+                    onKeyDown={allowIntegerOnly}
+                  />
+                </Form.Item>
+                <Form.Item
+                  name="workEndAge"
+                  label="Wiek zakończenia pracy"
+                  rules={[
+                    { required: true, message: "Podaj wiek zakończenia pracy" },
+                  ]}
+                >
+                  <InputNumber
+                    min={0}
+                    style={{ width: "100%" }}
+                    placeholder="np. 60"
+                    onKeyDown={allowIntegerOnly}
+                  />
+                </Form.Item>
+                <Form.Item
+                  name="statePensionAge"
+                  label="Wiek przejścia na emeryturę państwową"
+                  rules={[
+                    {
+                      required: true,
+                      message: "Podaj wiek przejścia na emeryturę państwową",
+                    },
+                  ]}
+                >
+                  <InputNumber
+                    min={0}
+                    style={{ width: "100%" }}
+                    placeholder="np. 65"
+                    onKeyDown={allowIntegerOnly}
+                  />
+                </Form.Item>
+                <Form.Item
+                  name="expectedDeathAge"
+                  label="Przewidywany wiek śmierci"
+                  rules={[
+                    {
+                      required: true,
+                      message: "Podaj przewidywany wiek śmierci",
+                    },
+                  ]}
+                >
+                  <InputNumber
+                    min={0}
+                    style={{ width: "100%" }}
+                    placeholder="np. 85"
+                    onKeyDown={allowIntegerOnly}
+                  />
+                </Form.Item>
+                <Form.Item
+                  name="estimatedPension"
+                  label="Szacowana emerytura państwowa (miesięcznie)"
+                  rules={[
+                    {
+                      required: true,
+                      message: "Podaj szacowaną emeryturę państwową",
+                    },
+                  ]}
+                >
+                  <InputNumber
+                    style={{ width: "100%" }}
+                    min={0}
+                    placeholder="np. 3000"
+                    onKeyDown={allowDecimal}
+                  />
+                </Form.Item>
+                <Form.Item
+                  name="monthlyNeed"
+                  label="Kwota potrzebna na przeżycie na emeryturze (miesięcznie)"
+                  rules={[
+                    {
+                      required: true,
+                      message:
+                        "Podaj kwotę potrzebną miesięcznie na emeryturze",
+                    },
+                  ]}
+                >
+                  <InputNumber
+                    min={0}
+                    style={{ width: "100%" }}
+                    placeholder="np. 4000"
+                    onKeyDown={allowDecimal}
+                  />
+                </Form.Item>
                 {knowsMonthlyAmount && (
-                  <div>
-                    <Form.Item
-                      name="monthlyInvestment"
-                      label="Miesięczna kwota inwestycji (PLN)"
-                      rules={[
-                        {
-                          required: true,
-                          message: "Podaj miesięczną kwotę inwestycji",
-                        },
-                      ]}
-                    >
-                      <InputNumber
-                        min={0}
-                        style={{ width: "100%" }}
-                        placeholder="np. 1000"
-                        onKeyDown={allowDecimal}
-                      />
-                    </Form.Item>
-                  </div>
+                  <Form.Item
+                    name="monthlyInvestment"
+                    label="Miesięczna kwota inwestycji (PLN)"
+                    rules={[
+                      {
+                        required: true,
+                        message: "Podaj miesięczną kwotę inwestycji",
+                      },
+                    ]}
+                  >
+                    <InputNumber
+                      min={0}
+                      style={{ width: "100%" }}
+                      placeholder="np. 1000"
+                      onKeyDown={allowDecimal}
+                    />
+                  </Form.Item>
                 )}
               </div>
 
@@ -451,15 +490,14 @@ export default function Calculator() {
           </Card>
         )}
 
+        {/* --- KROK 2 --- */}
         {current === 2 && (
           <Card
             title="Wybierz profil portfela"
             className="w-full max-w-5xl"
             extra={
               <Tooltip
-                title={
-                  "Przedstawione poniżej wykresy są poglądowe i mają charakter informatyczny"
-                }
+                title="Przedstawione poniżej wykresy są poglądowe i mają charakter informatyczny"
                 styles={{ root: { maxWidth: 320, fontSize: 14 } }}
                 getPopupContainer={(trigger) =>
                   trigger?.parentElement || document.body
@@ -468,7 +506,6 @@ export default function Calculator() {
                 <InfoCircleOutlined
                   style={{ fontSize: 20 }}
                   className="cursor-pointer"
-                  aria-label="Informacja"
                 />
               </Tooltip>
             }
@@ -578,32 +615,70 @@ export default function Calculator() {
           </Card>
         )}
 
+        {/* --- KROK 3 --- */}
         {current === 3 && (
           <Card className="w-full">
             <div className="flex flex-col gap-1">
-              <div className="flex">
-                {!simIsLoading && <Button onClick={prev}>Wstecz</Button>}
+              <div className="flex justify-between items-center">
+                {!simIsLoading ? (
+                  <Button onClick={prev}>Wstecz</Button>
+                ) : (
+                  <div />
+                )}
+                {!simIsLoading && simulationReady && (
+                  <button
+                    type="button"
+                    onClick={handleSaveClick}
+                    disabled={justSaved}
+                    className={`
+                      inline-flex items-center gap-2 px-5 py-2 rounded-lg
+                      text-sm font-semibold transition-all duration-200
+                      focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400/50
+                      ${
+                        justSaved
+                          ? "bg-emerald-600 text-white cursor-default"
+                          : "bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white cursor-pointer shadow-md shadow-blue-600/20 hover:shadow-lg hover:shadow-blue-600/30"
+                      }
+                    `}
+                  >
+                    {justSaved ? (
+                      <>
+                        <CheckOutlined style={{ fontSize: 15 }} />
+                        Zapisano
+                      </>
+                    ) : isLoggedIn ? (
+                      <>
+                        <CloudUploadOutlined style={{ fontSize: 15 }} />
+                        Zapisz symulację
+                      </>
+                    ) : (
+                      <>
+                        <LockOutlined style={{ fontSize: 15 }} />
+                        Zaloguj się, aby zapisać
+                      </>
+                    )}
+                  </button>
+                )}
               </div>
               <Simulation
                 formValues={formValues}
+                knowsMonthlyAmount={knowsMonthlyAmount}
+                userMonthlyInvestment={formValues.monthlyInvestment}
                 startingMonthlyPayment={startingMonthlyPayment}
                 portfolio={
                   portfolio === "aggressive"
-                    ? {
-                        stocks: 60,
-                        bonds: 40,
-                      }
+                    ? { stocks: 60, bonds: 40 }
                     : portfolio === "defensive"
-                      ? {
-                          stocks: 40,
-                          bonds: 60,
-                        }
-                      : {
-                          stocks: 100,
-                          bonds: 0,
-                        }
+                      ? { stocks: 40, bonds: 60 }
+                      : { stocks: 100, bonds: 0 }
                 }
                 onLoadingChange={setSimIsLoading}
+                isLoggedIn={isLoggedIn}
+                saveModalOpen={saveModalOpen}
+                onSaveModalClose={handleSaveModalClose}
+                onSimulationReady={handleSimulationReady}
+                onSaved={handleSaved}
+                onSimulationResults={handleSimulationResults}
               />
             </div>
           </Card>

@@ -11,6 +11,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
+import type { PercentilePoint } from "@/src/lib/simulation-types";
 
 type ChartPoint = {
   label: string;
@@ -29,8 +30,9 @@ type CombinedChartPoint = {
 
 type SimulationComparisonChartProps = {
   series: SimulationSeries[];
-  displayEveryNthSimulation?: number; // np. 20 = wyświetl co 20-tą symulację
+  displayEveryNthSimulation?: number;
   animate?: boolean;
+  precomputedPercentiles?: PercentilePoint[];
 };
 
 const CustomTooltip = ({
@@ -127,6 +129,7 @@ export default function SimulationComparisonChart({
   series,
   displayEveryNthSimulation = 20,
   animate = false,
+  precomputedPercentiles,
 }: SimulationComparisonChartProps) {
   const formatAmount = (value: number) =>
     new Intl.NumberFormat("pl-PL", { maximumFractionDigits: 0 }).format(value);
@@ -144,10 +147,12 @@ export default function SimulationComparisonChart({
 
   const visibleSeries = useMemo(
     () =>
-      series.filter(
-        (item) => item.id % Math.max(1, displayEveryNthSimulation) === 1,
-      ),
-    [series, displayEveryNthSimulation],
+      precomputedPercentiles
+        ? []
+        : series.filter(
+            (item) => item.id % Math.max(1, displayEveryNthSimulation) === 1,
+          ),
+    [series, displayEveryNthSimulation, precomputedPercentiles],
   );
 
   const visibleSeriesIds = useMemo(
@@ -156,6 +161,18 @@ export default function SimulationComparisonChart({
   );
 
   const combinedChartData: CombinedChartPoint[] = useMemo(() => {
+    // Jeśli mamy gotowe percentyle — użyj ich bezpośrednio
+    if (precomputedPercentiles && precomputedPercentiles.length > 0) {
+      return precomputedPercentiles.map((point) => ({
+        label: point.label,
+        p5: point.p5,
+        p25: point.p25,
+        p50: point.p50,
+        p75: point.p75,
+        p95: point.p95,
+      }));
+    }
+
     if (series.length === 0) {
       return [];
     }
@@ -190,27 +207,22 @@ export default function SimulationComparisonChart({
 
       return row;
     });
-  }, [series, visibleSeriesIds]);
+  }, [series, visibleSeriesIds, precomputedPercentiles]);
 
   const percentileYDomain = useMemo<[number, number] | undefined>(() => {
     if (combinedChartData.length === 0) {
       return undefined;
     }
 
-    const percentileValues = combinedChartData.flatMap((row) => [
-      Number(row.p5 ?? 0),
-      Number(row.p25 ?? 0),
-      Number(row.p50 ?? 0),
-      Number(row.p75 ?? 0),
-      Number(row.p95 ?? 0),
-    ]);
+    const p5Values = combinedChartData.map((row) => Number(row.p5 ?? 0));
+    const p95Values = combinedChartData.map((row) => Number(row.p95 ?? 0));
 
-    const min = Math.min(...percentileValues);
-    const max = Math.max(...percentileValues);
+    const min = Math.min(...p5Values);
+    const max = Math.max(...p95Values);
+
     const domainMin = Math.min(min, 0);
     const domainMax = Math.max(max, 0);
 
-    // Keep a visible axis range even when all percentile lines are flat.
     if (domainMin === domainMax) {
       const pad = Math.max(1, Math.abs(domainMin) * 0.05);
       return [domainMin - pad, domainMax + pad];
@@ -226,7 +238,12 @@ export default function SimulationComparisonChart({
         Linie percentylowe: P5, P25, P50, P75 i P95.
       </p>
       <div className="h-80 w-full" style={{ position: "relative" }}>
-        <ResponsiveContainer width="100%" height="100%">
+        <ResponsiveContainer
+          width="100%"
+          height="100%"
+          minWidth={0}
+          debounce={50}
+        >
           <LineChart
             data={combinedChartData}
             margin={{ top: 14, right: 20, left: 6, bottom: 2 }}
@@ -234,12 +251,17 @@ export default function SimulationComparisonChart({
             <CartesianGrid
               strokeDasharray="3 3"
               stroke="rgba(148,163,184,0.22)"
+              horizontal
+              vertical
             />
             <XAxis
               dataKey="label"
+              type="category"
               tick={{ fontSize: 12, fill: "var(--text)" }}
               tickLine={{ stroke: "rgba(148,163,184,0.65)" }}
               axisLine={{ stroke: "rgba(148,163,184,0.65)" }}
+              interval="preserveStartEnd"
+              minTickGap={20}
             />
             <YAxis
               tickFormatter={(value) => formatAmount(Number(value))}
@@ -248,11 +270,6 @@ export default function SimulationComparisonChart({
               axisLine={{ stroke: "rgba(148,163,184,0.65)" }}
               allowDecimals={false}
               domain={percentileYDomain ?? ["auto", "auto"]}
-              ticks={
-                percentileYDomain
-                  ? [percentileYDomain[0], 0, percentileYDomain[1]]
-                  : undefined
-              }
               allowDataOverflow
             />
             <ReferenceLine
@@ -262,14 +279,8 @@ export default function SimulationComparisonChart({
             />
             <RechartsTooltip
               content={<CustomTooltip />}
-              contentStyle={{
-                borderRadius: 10,
-                border: "1px solid var(--btn-border)",
-                background: "var(--bg)",
-                color: "var(--text)",
-                fontSize: 12,
-                boxShadow: "0 8px 24px rgba(15, 23, 42, 0.14)",
-              }}
+              cursor={{ stroke: "rgba(148,163,184,0.4)", strokeWidth: 1 }}
+              wrapperStyle={{ zIndex: 30 }}
             />
             {visibleSeries.map((item) => (
               <Line
@@ -351,7 +362,6 @@ export default function SimulationComparisonChart({
             />
           </LineChart>
         </ResponsiveContainer>
-        {/* single overlay used to reveal the chart (animates one element only) */}
         <ChartRevealOverlay
           animate={animate}
           delay={chartAnimationDelay}
@@ -372,17 +382,24 @@ function ChartRevealOverlay({
   duration: number;
 }) {
   const [covered, setCovered] = useState<boolean>(animate ? true : false);
+  const [hidden, setHidden] = useState<boolean>(!animate);
 
   useEffect(() => {
-    let t: ReturnType<typeof setTimeout> | null = null;
+    let revealTimer: ReturnType<typeof setTimeout> | null = null;
+    let hideTimer: ReturnType<typeof setTimeout> | null = null;
+
     if (animate) {
-      // schedule reveal on next tick so CSS transition runs
-      t = setTimeout(() => setCovered(false), 10);
+      revealTimer = setTimeout(() => setCovered(false), 10);
+      // Po zakończeniu animacji zdejmij overlay całkowicie z DOM
+      hideTimer = setTimeout(() => setHidden(true), delay + duration + 100);
     }
     return () => {
-      if (t) clearTimeout(t);
+      if (revealTimer) clearTimeout(revealTimer);
+      if (hideTimer) clearTimeout(hideTimer);
     };
-  }, [animate]);
+  }, [animate, delay, duration]);
+
+  if (hidden) return null;
 
   const style: React.CSSProperties = {
     position: "absolute",

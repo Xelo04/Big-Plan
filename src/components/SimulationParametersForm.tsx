@@ -8,17 +8,20 @@ type SimulationFormInputs = {
   estimatedPension: number;
   monthlyNeed: number;
   stocksPct: number;
+  monthlyInvestment: number;
 };
 
 type SimulationParametersFormProps = {
   inputs: SimulationFormInputs;
   hasPendingChanges: boolean;
+  showMonthlyInvestmentField?: boolean;
   onInputsChange: (nextInputs: SimulationFormInputs) => void;
 };
 
 export default function SimulationParametersForm({
   inputs,
   hasPendingChanges,
+  showMonthlyInvestmentField = false,
   onInputsChange,
 }: SimulationParametersFormProps) {
   const bondsPct = 100 - inputs.stocksPct;
@@ -104,6 +107,21 @@ export default function SimulationParametersForm({
             }
           />
         </div>
+        {showMonthlyInvestmentField && (
+          <div>
+            <p className="text-xs text-(--muted) mb-1">
+              Miesięczna kwota inwestycji (PLN)
+            </p>
+            <InputNumber
+              min={0}
+              style={{ width: "100%" }}
+              value={inputs.monthlyInvestment}
+              onChange={(value) =>
+                updateInputs({ monthlyInvestment: Number(value ?? 0) })
+              }
+            />
+          </div>
+        )}
       </div>
 
       <p className="text-sm font-semibold mb-2">Sklad portfela</p>

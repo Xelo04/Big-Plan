@@ -15,6 +15,7 @@ import {
 } from "antd";
 import { GoogleOutlined } from "@ant-design/icons";
 import { getErrorMessage } from "@/src/lib/error-utils";
+import { handlePostAuth } from "@/src/lib/post-auth-actions";
 
 const { Title } = Typography;
 
@@ -68,10 +69,16 @@ export default function SignInPage() {
           });
         }
       } else {
-        router.push("/dashboard");
-        notification.success({
-          title: "Zalogowano pomyślnie",
-        });
+        // Sukces — sprawdź czy jest pending simulation
+        const result = await handlePostAuth(notification, "/dashboard");
+
+        if (!result.handled) {
+          notification.success({
+            title: "Zalogowano pomyślnie",
+          });
+        }
+
+        router.push(result.redirectTo);
       }
     } catch (error) {
       notification.error({

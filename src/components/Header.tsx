@@ -49,11 +49,11 @@ export default function Header({ user }: { user: User | null }) {
 
         <div className="flex items-center gap-7">
           <nav className="hidden sm:flex gap-4">
-            <Link href="/about" className="text-sm">
-              About
+            <Link href="/calculator" className="text-sm">
+              Kalkulator
             </Link>
-            <Link href="/docs" className="text-sm">
-              Docs
+            <Link href="/my-simulations" className="text-sm">
+              Moje symulacje
             </Link>
           </nav>
 

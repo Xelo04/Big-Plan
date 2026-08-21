@@ -45,7 +45,8 @@ model User {
 
   sessions  Session[]
   accounts  Account[]
-
+  simulations SavedSimulation[]
+  
   @@map("user")
 }
 
@@ -95,4 +96,45 @@ model Verification {
 
   @@index([identifier])
   @@map("verification")
+}
+
+model SavedSimulation {
+  id        String   @id @default(cuid())
+  name      String   @db.VarChar(80)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Parametry wejściowe
+  currentAge       Int
+  expectedDeathAge Int
+  workEndAge       Int
+  statePensionAge  Int
+  estimatedPension Float
+  monthlyNeed      Float
+
+  // Portfel
+  stocksPct Int
+  bondsPct  Int
+
+  // Tryb kalkulatora
+  knowsMonthlyAmount   Boolean
+  userMonthlyInvestment Float?
+
+  // Wyniki symulacji
+  recommendedMonthlyPayment Float
+  simulationSuccessRate     Float
+  userSimulationSuccessRate Float?
+
+  // Percentyle wykresów (JSON)
+  recommendedChartPercentiles Json
+  userChartPercentiles        Json?
+
+  // Metadane symulacji
+  totalSimulations Int @default(10000)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@map("saved_simulation")
 }

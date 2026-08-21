@@ -15,6 +15,7 @@ import {
 } from "antd";
 import { GoogleOutlined } from "@ant-design/icons";
 import { getErrorMessage } from "@/src/lib/error-utils";
+import { loadPendingSimulation } from "@/src/lib/pending-simulation";
 
 const { Title } = Typography;
 
@@ -59,11 +60,23 @@ export default function SignUpPage() {
           });
         }
       } else {
-        router.push("/dashboard");
-        notification.success({
-          title: "Zarejestrowano pomyślnie",
-        });
+        // Sprawdź czy jest pending simulation (dane zostają w sessionStorage do weryfikacji)
+        const hasPending = loadPendingSimulation() !== null;
 
+        if (hasPending) {
+          notification.success({
+            title: "Zarejestrowano pomyślnie",
+            description:
+              "Zweryfikuj adres e-mail, aby zapisać swoją symulację. Dane symulacji zostaną zachowane przez 30 minut.",
+            duration: 10,
+          });
+        } else {
+          notification.success({
+            title: "Zarejestrowano pomyślnie",
+          });
+        }
+
+        // Wyślij email weryfikacyjny
         await fetch("/api/user/email", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -193,10 +206,7 @@ export default function SignUpPage() {
             dependencies={["password"]}
             hasFeedback
             rules={[
-              {
-                required: true,
-                message: "Powtórz hasło",
-              },
+              { required: true, message: "Powtórz hasło" },
               ({ getFieldValue }) => ({
                 validator(_, value) {
                   if (!value || getFieldValue("password") === value) {

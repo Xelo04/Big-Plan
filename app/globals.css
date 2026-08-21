@@ -165,7 +165,10 @@ html.dark body {
   gap: 0.5rem;
   font-weight: 600;
   box-shadow: 0 10px 15px rgba(59, 130, 246, 0.18);
-  transition: transform 160ms ease, box-shadow 180ms ease, filter 160ms ease;
+  transition:
+    transform 160ms ease,
+    box-shadow 180ms ease,
+    filter 160ms ease;
   cursor: pointer;
 }
 
@@ -184,7 +187,10 @@ html.dark body {
   gap: 0.5rem;
   font-weight: 600;
   box-shadow: 0 10px 15px rgba(59, 130, 246, 0.18);
-  transition: transform 160ms ease, box-shadow 180ms ease, filter 160ms ease;
+  transition:
+    transform 160ms ease,
+    box-shadow 180ms ease,
+    filter 160ms ease;
   cursor: pointer;
 }
 
@@ -199,7 +205,10 @@ html.dark body {
   gap: 0.5rem;
   font-weight: 600;
   box-shadow: 0 10px 15px rgba(59, 130, 246, 0.18);
-  transition: transform 160ms ease, box-shadow 180ms ease, filter 160ms ease;
+  transition:
+    transform 160ms ease,
+    box-shadow 180ms ease,
+    filter 160ms ease;
   cursor: pointer;
 }
 
@@ -215,7 +224,10 @@ html.dark body {
   font-weight: 600;
   backdrop-filter: blur(6px);
   -webkit-backdrop-filter: blur(6px);
-  transition: background 150ms ease, transform 120ms ease, box-shadow 160ms ease;
+  transition:
+    background 150ms ease,
+    transform 120ms ease,
+    box-shadow 160ms ease;
   cursor: pointer;
 }
 
@@ -227,4 +239,136 @@ html.dark body {
 .btn-no-color:active {
   transform: translateY(0);
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.06);
+}
+
+/* ==========================================================
+   AntD Modal — globalny wygląd spójny z motywem aplikacji
+   ========================================================== */
+
+.ant-modal {
+  background: transparent !important;
+}
+
+.ant-modal-container,
+.ant-modal-content,
+.ant-modal-header,
+.ant-modal-body,
+.ant-modal-footer {
+  background: var(--bg) !important;
+  padding: 0 !important;
+  border-radius: 12px !important;
+}
+
+.ant-modal-content {
+  border: 1px solid var(--btn-border);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+  padding: 0 !important;
+  overflow: hidden;
+  border-radius: 12px;
+}
+
+.ant-modal-header {
+  border-bottom: 1px solid var(--btn-border);
+  margin: 0 !important;
+  padding: 18px 24px !important;
+}
+
+.ant-modal-title {
+  color: var(--text) !important;
+  font-weight: 600;
+  font-size: 24px !important;
+}
+
+.ant-modal-body {
+  color: var(--text);
+  padding: 20px 24px !important;
+}
+
+.ant-modal-footer {
+  border-top: 1px solid var(--btn-border);
+  margin: 0 !important;
+  padding: 14px 24px !important;
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.ant-modal-footer .ant-btn + .ant-btn {
+  margin-inline-start: 0 !important;
+}
+
+.ant-modal-close {
+  color: var(--icon-muted) !important;
+  top: 14px !important;
+  inset-inline-end: 14px !important;
+}
+
+.ant-modal-close:hover {
+  color: var(--text) !important;
+  background: color-mix(in srgb, var(--text) 8%, transparent) !important;
+}
+
+.ant-modal-mask {
+  backdrop-filter: blur(4px);
+  background: rgba(0, 0, 0, 0.55) !important;
+}
+
+/* Inputs inside any modal */
+.ant-modal .ant-input-affix-wrapper,
+.ant-modal .ant-input {
+  background: var(--bg) !important;
+  border-color: var(--btn-border) !important;
+  color: var(--text) !important;
+  box-shadow: none !important;
+}
+
+.ant-modal .ant-input-affix-wrapper:hover,
+.ant-modal .ant-input:hover {
+  border-color: #3b82f6 !important;
+}
+
+.ant-modal .ant-input-affix-wrapper-focused,
+.ant-modal .ant-input:focus {
+  border-color: #3b82f6 !important;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.15) !important;
+}
+
+.ant-modal .ant-input::placeholder {
+  color: var(--icon-muted) !important;
+}
+
+.ant-modal .ant-input-show-count-suffix,
+.ant-modal .ant-input-data-count {
+  color: var(--icon-muted) !important;
+}
+
+/* Cancel button (default) */
+.ant-modal-footer .ant-btn-default {
+  background: transparent !important;
+  border-color: var(--btn-border) !important;
+  color: var(--text) !important;
+}
+
+.ant-modal-footer .ant-btn-default:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--text) 6%, transparent) !important;
+  border-color: var(--btn-border) !important;
+  color: var(--text) !important;
+}
+
+/* Primary button — niebieski */
+.ant-modal-footer .ant-btn-primary:not(:disabled) {
+  background: #2563eb !important;
+  border-color: #2563eb !important;
+  color: #ffffff !important;
+}
+
+.ant-modal-footer .ant-btn-primary:not(:disabled):hover {
+  background: #1d4ed8 !important;
+  border-color: #1d4ed8 !important;
+}
+
+.ant-modal-footer .ant-btn-primary:disabled {
+  background: color-mix(in srgb, var(--text) 10%, transparent) !important;
+  border-color: var(--btn-border) !important;
+  color: var(--icon-muted) !important;
 }
