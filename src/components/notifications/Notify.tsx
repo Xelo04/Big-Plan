@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, startTransition } from "react";
 import { useRouter } from "next/navigation";
-import { useNotify } from "@/src/components/NotificationProvider";
+import { useNotify } from "@/src/components/notifications/NotificationProvider";
 
 export default function Notify({
   title,

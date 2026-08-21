@@ -8,7 +8,7 @@ import {
   CalendarOutlined,
   TagOutlined,
 } from "@ant-design/icons";
-import { User } from "@/src/lib/auth";
+import { User } from "@/src/lib/auth/auth";
 import ChangePasswordForm from "./ChangePasswordForm";
 
 const { Title, Text } = Typography;

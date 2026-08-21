@@ -1,7 +1,7 @@
-import Footer from "@/src/components/Footer";
-import Header from "@/src/components/Header";
-import PostAuthHandler from "@/src/components/PostAuthHandler";
-import { getSession } from "@/src/lib/get-session";
+import Footer from "@/src/components/layout/Footer";
+import Header from "@/src/components/layout/Header";
+import PostAuthHandler from "@/src/components/auth/PostAuthHandler";
+import { getSession } from "@/src/lib/auth/get-session";
 import { redirect } from "next/navigation";
 import { ReactNode } from "react";
 

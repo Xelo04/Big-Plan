@@ -5,8 +5,8 @@ import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { Avatar, Button } from "antd";
 import { UserOutlined } from "@ant-design/icons";
-import { User } from "@/src/lib/auth";
-import { useNotify } from "@/src/components/NotificationProvider";
+import { User } from "@/src/lib/auth/auth";
+import { useNotify } from "@/src/components/notifications/NotificationProvider";
 
 export default function ProfilePicture({ user }: { user: User }) {
   const notification = useNotify();

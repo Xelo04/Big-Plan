@@ -10,9 +10,9 @@ import {
   UserOutlined,
 } from "@ant-design/icons";
 import { useRouter } from "next/navigation";
-import { useNotify } from "./NotificationProvider";
-import SimulationComparisonChart from "./SimulationComparisonChart";
-import type { SavedSimulationDTO } from "@/src/lib/simulation-types";
+import { useNotify } from "../notifications/NotificationProvider";
+import SimulationComparisonChart from "../calculator/SimulationComparisonChart";
+import type { SavedSimulationDTO } from "@/src/lib/simulation/simulation-types";
 
 type SimulationDetailsProps = {
   simulationId: string;

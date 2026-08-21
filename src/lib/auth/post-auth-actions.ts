@@ -5,7 +5,7 @@ import {
   clearPendingSimulation,
   loadPendingSimulation,
   pendingSimulationToPayload,
-} from "./pending-simulation";
+} from "../simulation/pending-simulation";
 
 export type PostAuthResult = {
   redirectTo: string;

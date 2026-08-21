@@ -1,4 +1,4 @@
-import SimulationDetails from "@/src/components/SimulationDetails";
+import SimulationDetails from "@/src/components/simulations/SimulationDetails";
 
 type PageProps = {
   params: Promise<{ id: string }>;

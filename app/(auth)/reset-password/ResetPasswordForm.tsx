@@ -1,11 +1,11 @@
 "use client";
 
-import { useNotify } from "@/src/components/NotificationProvider";
-import { authClient } from "@/src/lib/auth-client";
+import { useNotify } from "@/src/components/notifications/NotificationProvider";
+import { authClient } from "@/src/lib/auth/auth-client";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Form, Input, Button, Typography } from "antd";
-import { getErrorMessage } from "@/src/lib/error-utils";
+import { getErrorMessage } from "@/src/lib/utils/error-utils";
 
 const { Title } = Typography;
 

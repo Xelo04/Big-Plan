@@ -1,6 +1,6 @@
 "use client";
 
-import ThemeToggle from "@/src/components/ThemeToggle";
+import ThemeToggle from "@/src/components/theme/ThemeToggle";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
@@ -9,10 +9,10 @@ import {
   LogoutOutlined,
 } from "@ant-design/icons";
 import Image from "next/image";
-import { User } from "../lib/auth";
+import { User } from "../../lib/auth/auth";
 import { Button, Dropdown } from "antd";
 import type { MenuProps } from "antd";
-import { authClient } from "../lib/auth-client";
+import { authClient } from "../../lib/auth/auth-client";
 import { useState } from "react";
 import LoadingPage from "./LoadingPage";
 

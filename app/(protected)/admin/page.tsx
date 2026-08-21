@@ -1,5 +1,5 @@
 // TODO Dodać panel admina z dokumentacji: https://www.better-auth.com/docs/plugins/admin
-import { getSession } from "@/src/lib/get-session";
+import { getSession } from "@/src/lib/auth/get-session";
 import { forbidden, unauthorized } from "next/navigation";
 
 export default async function AdminPage() {

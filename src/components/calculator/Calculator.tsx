@@ -21,7 +21,7 @@ import {
   savePendingSimulation,
   type PendingSimulation,
   type PendingSimulationResults,
-} from "@/src/lib/pending-simulation";
+} from "@/src/lib/simulation/pending-simulation";
 
 const stepsItems = [
   { title: "Wybór" },

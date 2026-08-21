@@ -1,4 +1,4 @@
-import Calculator from "@/src/components/Calculator";
+import Calculator from "@/src/components/calculator/Calculator";
 
 const page = () => {
   return <Calculator />;

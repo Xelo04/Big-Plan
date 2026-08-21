@@ -2,8 +2,8 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { authClient } from "@/src/lib/auth-client";
-import { useNotify } from "@/src/components/NotificationProvider";
+import { authClient } from "@/src/lib/auth/auth-client";
+import { useNotify } from "@/src/components/notifications/NotificationProvider";
 import {
   Form,
   Input,
@@ -14,8 +14,8 @@ import {
   Checkbox,
 } from "antd";
 import { GoogleOutlined } from "@ant-design/icons";
-import { getErrorMessage } from "@/src/lib/error-utils";
-import { handlePostAuth } from "@/src/lib/post-auth-actions";
+import { getErrorMessage } from "@/src/lib/utils/error-utils";
+import { handlePostAuth } from "@/src/lib/auth/post-auth-actions";
 
 const { Title } = Typography;
 

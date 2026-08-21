@@ -1,6 +1,6 @@
-import Footer from "@/src/components/Footer";
-import Header from "@/src/components/Header";
-import { getSession } from "@/src/lib/get-session";
+import Footer from "@/src/components/layout/Footer";
+import Header from "@/src/components/layout/Header";
+import { getSession } from "@/src/lib/auth/get-session";
 import { ReactNode } from "react";
 
 export default async function PublicLayout({

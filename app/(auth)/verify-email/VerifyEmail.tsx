@@ -1,10 +1,10 @@
 "use client";
 
-import { authClient } from "@/src/lib/auth-client";
+import { authClient } from "@/src/lib/auth/auth-client";
 import { useState } from "react";
 import { Button, Typography } from "antd";
-import { useNotify } from "@/src/components/NotificationProvider";
-import { getErrorMessage } from "@/src/lib/error-utils";
+import { useNotify } from "@/src/components/notifications/NotificationProvider";
+import { getErrorMessage } from "@/src/lib/utils/error-utils";
 
 const { Title, Text } = Typography;
 

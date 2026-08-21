@@ -1,9 +1,9 @@
 import { betterAuth } from "better-auth";
 import { prismaAdapter } from "better-auth/adapters/prisma";
-import prisma from "./prisma";
+import prisma from "../db/prisma";
 import { APIError, createAuthMiddleware } from "better-auth/api";
-import { passwordSchema } from "./validation";
-import { sendEmail } from "./email";
+import { passwordSchema } from "../utils/validation";
+import { sendEmail } from "../email/email";
 
 export const auth = betterAuth({
   database: prismaAdapter(prisma, {

@@ -7,7 +7,7 @@ import {
   EyeOutlined,
 } from "@ant-design/icons";
 import { useRouter } from "next/navigation";
-import type { SavedSimulationDTO } from "@/src/lib/simulation-types";
+import type { SavedSimulationDTO } from "@/src/lib/simulation/simulation-types";
 
 type SimulationCardProps = {
   simulation: SavedSimulationDTO;

@@ -1,4 +1,4 @@
-import SimulationEditor from "@/src/components/SimulationEditor";
+import SimulationEditor from "@/src/components/simulations/SimulationEditor";
 
 type PageProps = {
   params: Promise<{ id: string }>;

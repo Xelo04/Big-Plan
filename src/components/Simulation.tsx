@@ -8,14 +8,14 @@ import {
   UserOutlined,
 } from "@ant-design/icons";
 import type { FormValues } from "./Calculator";
-import SimulationComparisonChart from "./SimulationComparisonChart";
-import SimulationParametersForm from "./SimulationParametersForm";
-import SaveSimulationModal from "./SaveSimulationModal";
-import { useNotify } from "./NotificationProvider";
+import SimulationComparisonChart from "../SimulationComparisonChart";
+import SimulationParametersForm from "../SimulationParametersForm";
+import SaveSimulationModal from "../SaveSimulationModal";
+import { useNotify } from "../notifications/NotificationProvider";
 import { wartosciPortfelaSymulacja } from "@/app/(public)/calculator/calculator";
-import { extractPercentiles } from "@/src/lib/extract-percentiles";
-import type { SaveSimulationPayload } from "@/src/lib/simulation-types";
-import type { PendingSimulationResults } from "@/src/lib/pending-simulation";
+import { extractPercentiles } from "@/src/lib/simulation/extract-percentiles";
+import type { SaveSimulationPayload } from "@/src/lib/simulation/simulation-types";
+import type { PendingSimulationResults } from "@/src/lib/simulation/pending-simulation";
 
 type SimulationProps = {
   formValues: FormValues;
@@ -83,8 +83,8 @@ export default function Simulation({
   const totalTrialSimulations = 1000;
   const targetSuccessRate = 0.9;
   const targetTolerance = 0.005;
-  const visibleSimulationStep = Math.max(1, Math.ceil(totalSimulations / 150));
-  const chunkCount = 500;
+  const visibleSimulationStep = Math.max(1, Math.ceil(totalSimulations / 100));
+  const chunkCount = 200;
 
   const [results, setResults] = useState<SimulationResult[]>([]);
   const [userPaymentResults, setUserPaymentResults] = useState<

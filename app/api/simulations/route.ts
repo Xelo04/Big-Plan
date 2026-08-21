@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import type { Prisma } from "@/src/generated/prisma/client";
-import prisma from "@/src/lib/prisma";
-import { getSession } from "@/src/lib/get-session";
+import prisma from "@/src/lib/db/prisma";
+import { getSession } from "@/src/lib/auth/get-session";
 
 const MAX_SIMULATIONS_PER_USER = 3;
 const MAX_NAME_LENGTH = 80;

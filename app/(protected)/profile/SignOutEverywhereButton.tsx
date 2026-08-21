@@ -1,13 +1,13 @@
 "use client";
 
-import LoadingPage from "@/src/components/LoadingPage";
-import { useNotify } from "@/src/components/NotificationProvider";
-import { authClient } from "@/src/lib/auth-client";
+import LoadingPage from "@/src/components/layout/LoadingPage";
+import { useNotify } from "@/src/components/notifications/NotificationProvider";
+import { authClient } from "@/src/lib/auth/auth-client";
 import { Button } from "antd";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { LogoutOutlined } from "@ant-design/icons";
-import { getErrorMessage } from "@/src/lib/error-utils";
+import { getErrorMessage } from "@/src/lib/utils/error-utils";
 
 export default function SignOutEverywhereButton() {
   const notification = useNotify();

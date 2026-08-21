@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import fs from "fs/promises";
 import path from "path";
 import crypto from "crypto";
-import prisma from "@/src/lib/prisma";
+import prisma from "@/src/lib/db/prisma";
 
 /* Maksymalny rozmiar uploadu */
 const MAX_BYTES = 20 * 1024 * 1024; // 20MB
@@ -47,7 +47,7 @@ function shortHash(len = 8) {
 */
 async function resolveServerUserId() {
   try {
-    const mod = await import("@/src/lib/get-session");
+    const mod = await import("@/src/lib/auth/get-session");
     if (typeof mod.getSession === "function") {
       const session = await mod.getSession();
       return session?.user?.id ?? null;
@@ -74,7 +74,7 @@ export async function POST(req: Request) {
     if (!sessionUserId) {
       return NextResponse.json(
         { error: "Brak aktywnej sesji. Zaloguj się ponownie." },
-        { status: 401 }
+        { status: 401 },
       );
     }
     const userId = String(sessionUserId);
@@ -84,7 +84,7 @@ export async function POST(req: Request) {
     if (!ct.startsWith("multipart/form-data")) {
       return NextResponse.json(
         { error: "Wystąpił błąd z przesyłaniem danych. Spróbuj ponownie." },
-        { status: 415 }
+        { status: 415 },
       );
     }
 
@@ -94,7 +94,7 @@ export async function POST(req: Request) {
     if (!file)
       return NextResponse.json(
         { error: "Brak pliku do przesłania." },
-        { status: 400 }
+        { status: 400 },
       );
 
     // walidacja MIME
@@ -105,7 +105,7 @@ export async function POST(req: Request) {
           error:
             "Nieobsługiwany typ pliku. Dozwolone: jpg, png, webp, gif, svg, avif.",
         },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -117,7 +117,7 @@ export async function POST(req: Request) {
     if (size > MAX_BYTES) {
       return NextResponse.json(
         { error: "Plik jest za duży. Maksymalny rozmiar to 20 MB." },
-        { status: 413 }
+        { status: 413 },
       );
     }
 
@@ -135,7 +135,7 @@ export async function POST(req: Request) {
       "public",
       "uploads",
       "avatars",
-      userId
+      userId,
     );
     await fs.mkdir(uploadsDir, { recursive: true, mode: 0o755 });
     const filePath = path.join(uploadsDir, filename);
@@ -147,7 +147,7 @@ export async function POST(req: Request) {
 
     // publiczny URL do pliku
     const publicUrl = `/uploads/avatars/${encodeURIComponent(
-      userId
+      userId,
     )}/${encodeURIComponent(filename)}`;
 
     // aktualizacja rekordu użytkownika w DB (prisma)

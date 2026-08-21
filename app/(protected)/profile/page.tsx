@@ -1,4 +1,4 @@
-import { getSession } from "@/src/lib/get-session";
+import { getSession } from "@/src/lib/auth/get-session";
 import { unauthorized } from "next/navigation";
 import Profile from "./Profile";
 

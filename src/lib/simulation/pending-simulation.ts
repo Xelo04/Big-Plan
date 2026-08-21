@@ -1,4 +1,4 @@
-import type { FormValues } from "@/src/components/Calculator";
+import type { FormValues } from "@/src/components/calculator/Calculator";
 import type {
   PercentilePoint,
   SaveSimulationPayload,

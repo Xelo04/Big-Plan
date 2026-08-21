@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, useEffect } from "react";
+import { useMemo, useState, useEffect, memo } from "react";
 import {
   CartesianGrid,
   Line,
@@ -11,7 +11,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import type { PercentilePoint } from "@/src/lib/simulation-types";
+import type { PercentilePoint } from "@/src/lib/simulation/simulation-types";
 
 type ChartPoint = {
   label: string;
@@ -125,7 +125,7 @@ const CustomTooltip = ({
   );
 };
 
-export default function SimulationComparisonChart({
+const SimulationComparisonChart = memo(function SimulationComparisonChart({
   series,
   displayEveryNthSimulation = 20,
   animate = false,
@@ -161,7 +161,6 @@ export default function SimulationComparisonChart({
   );
 
   const combinedChartData: CombinedChartPoint[] = useMemo(() => {
-    // Jeśli mamy gotowe percentyle — użyj ich bezpośrednio
     if (precomputedPercentiles && precomputedPercentiles.length > 0) {
       return precomputedPercentiles.map((point) => ({
         label: point.label,
@@ -370,7 +369,9 @@ export default function SimulationComparisonChart({
       </div>
     </div>
   );
-}
+});
+
+export default SimulationComparisonChart;
 
 function ChartRevealOverlay({
   animate,
@@ -390,7 +391,6 @@ function ChartRevealOverlay({
 
     if (animate) {
       revealTimer = setTimeout(() => setCovered(false), 10);
-      // Po zakończeniu animacji zdejmij overlay całkowicie z DOM
       hideTimer = setTimeout(() => setHidden(true), delay + duration + 100);
     }
     return () => {

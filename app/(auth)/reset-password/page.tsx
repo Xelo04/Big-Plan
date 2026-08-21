@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import ResetPasswordForm from "./ResetPasswordForm";
-import Notify from "@/src/components/Notify";
+import Notify from "@/src/components/notifications/Notify";
 
 export const metadata: Metadata = {
   title: "Reset hasła",

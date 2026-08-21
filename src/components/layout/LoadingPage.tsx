@@ -3,7 +3,7 @@
 import { LoadingOutlined } from "@ant-design/icons";
 import { Spin, Typography } from "antd";
 import { useMemo } from "react";
-import { getTheme } from "./ThemeProvider";
+import { getTheme } from "../theme/ThemeProvider";
 
 const { Text } = Typography;
 

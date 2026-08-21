@@ -2,9 +2,9 @@
 
 import { useEffect, useRef } from "react";
 import { useRouter, usePathname } from "next/navigation";
-import { useNotify } from "./NotificationProvider";
-import { handlePostAuth } from "@/src/lib/post-auth-actions";
-import { loadPendingSimulation } from "@/src/lib/pending-simulation";
+import { useNotify } from "../notifications/NotificationProvider";
+import { handlePostAuth } from "@/src/lib/auth/post-auth-actions";
+import { loadPendingSimulation } from "@/src/lib/simulation/pending-simulation";
 
 /**
  * Renderowany w protected layout. Sprawdza czy jest jakiś pending action

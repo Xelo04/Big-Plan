@@ -10,18 +10,18 @@ import {
   UserOutlined,
 } from "@ant-design/icons";
 import { useRouter } from "next/navigation";
-import { useNotify } from "./NotificationProvider";
-import SimulationComparisonChart from "./SimulationComparisonChart";
-import SimulationParametersForm from "./SimulationParametersForm";
+import { useNotify } from "../notifications/NotificationProvider";
+import SimulationComparisonChart from "../calculator/SimulationComparisonChart";
+import SimulationParametersForm from "../calculator/SimulationParametersForm";
 import EditSaveConfirmModal from "./EditSaveConfirmModal";
 import EditDiscardConfirmModal from "./EditDiscardConfirmModal";
 import { wartosciPortfelaSymulacja } from "@/app/(public)/calculator/calculator";
-import { extractPercentiles } from "@/src/lib/extract-percentiles";
+import { extractPercentiles } from "@/src/lib/simulation/extract-percentiles";
 import type {
   PercentilePoint,
   SavedSimulationDTO,
   UpdateSimulationPayload,
-} from "@/src/lib/simulation-types";
+} from "@/src/lib/simulation/simulation-types";
 
 type SimulationEditorProps = {
   simulationId: string;
@@ -44,6 +44,7 @@ type SimulationInputs = {
 };
 
 const MAX_NAME_LENGTH = 80;
+const EMPTY_SERIES: SimulationResult[] = [];
 
 const sameInputs = (a: SimulationInputs | null, b: SimulationInputs | null) =>
   !!a &&
@@ -183,7 +184,7 @@ export default function SimulationEditor({
   const totalTrialSimulations = 1000;
   const targetSuccessRate = 0.9;
   const targetTolerance = 0.005;
-  const visibleSimulationStep = Math.max(1, Math.ceil(totalSimulations / 60));
+  const visibleSimulationStep = Math.max(1, Math.ceil(totalSimulations / 100));
   const chunkCount = 200;
 
   const runRecompute = useCallback(
@@ -271,7 +272,6 @@ export default function SimulationEditor({
           1,
           Math.floor(totalSimulations / chunkCount),
         );
-        let processed = 0;
 
         const runChunk = (startIdx: number) => {
           if (runIdRef.current !== runId) return;
@@ -315,8 +315,6 @@ export default function SimulationEditor({
               });
             }
           }
-
-          processed += end - startIdx;
 
           if (end < totalSimulations) {
             timeoutRef.current = setTimeout(() => runChunk(end), 0);
@@ -500,7 +498,7 @@ export default function SimulationEditor({
         <div className="h-12 w-2/3 rounded bg-black/5 animate-pulse mb-2" />
         <div className="h-4 w-1/3 rounded bg-black/5 animate-pulse mb-6" />
         <div
-          className="h-[500px] rounded-2xl border border-(--btn-border) animate-pulse"
+          className="h-125 rounded-2xl border border-(--btn-border) animate-pulse"
           style={{ background: "var(--card-background)" }}
         />
       </div>
@@ -556,7 +554,7 @@ export default function SimulationEditor({
     <>
       <SimulationComparisonChart
         key={`edit-chart-${chartRenderKey}`}
-        series={hasRecomputed ? results : []}
+        series={hasRecomputed ? results : EMPTY_SERIES}
         displayEveryNthSimulation={visibleSimulationStep}
         precomputedPercentiles={
           hasRecomputed
@@ -619,7 +617,7 @@ export default function SimulationEditor({
     <>
       <SimulationComparisonChart
         key={`edit-user-chart-${chartRenderKey}`}
-        series={hasRecomputed ? userPaymentResults : []}
+        series={hasRecomputed ? results : EMPTY_SERIES}
         displayEveryNthSimulation={visibleSimulationStep}
         precomputedPercentiles={
           hasRecomputed ? undefined : (initialUserPercentiles ?? undefined)

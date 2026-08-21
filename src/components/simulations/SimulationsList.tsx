@@ -9,8 +9,8 @@ import {
 } from "@ant-design/icons";
 import { useRouter } from "next/navigation";
 import SimulationCard from "./SimulationCard";
-import { useNotify } from "./NotificationProvider";
-import type { SavedSimulationDTO } from "@/src/lib/simulation-types";
+import { useNotify } from "../notifications/NotificationProvider";
+import type { SavedSimulationDTO } from "@/src/lib/simulation/simulation-types";
 
 const MAX_SIMULATIONS = 3;
 
