@@ -1,192 +1,184 @@
 # Big Plan
 
-Big Plan to aplikacja Next.js do planowania finansowego i inwestycyjnego. Zawiera uwierzytelnianie oparte o better-auth, profile użytkowników, obsługę weryfikacji e-mail, przesyłanie avatarów oraz kalkulator emerytalny z symulacjami portfela.
+Big Plan to zaawansowana aplikacja Next.js do planowania finansowego, symulacji inwestycyjnych oraz zarządzania portfelem aktywów.
+
+Aplikacja zawiera uwierzytelnianie oparte o `better-auth` (w tym rejestrację przez Google), profile użytkowników, weryfikację e-mail, kalkulator emerytalny z silnikiem symulacji Monte Carlo, moduł do zapisywania i edycji planów finansowych oraz moduł rzeczywistego portfela aktywów z automatyczną synchronizacją cen giełdowych, przeliczaniem walut i silnikiem rebalancingu.
+
+## Główne Funkcjonalności
+
+- **Uwierzytelnianie i Profil**: Logowanie e-mail/hasło oraz Google OAuth, obsługa weryfikacji adresu e-mail, przesyłanie i kadrowanie avatarów, zmiana hasła w modalu oraz przycisk wylogowania ze wszystkich urządzeń.
+- **Kalkulator & Symulacje Monte Carlo**: Wyliczanie bezwzględnych i rekomendowanych składek emerytalnych na podstawie 10 000 scenariuszy rynkowych (percentyle P5, P25, P50, P75, P95).
+- **Zapisywanie Symulacji**: Zapisywanie wyników symulacji do bazy danych (z limitem 3 na konto) oraz mechanizm persystencji w `localStorage` pozwalający bezproblemowo zapisać symulację po zalogowaniu/rejestracji.
+- **Zarządzanie Symulacjami (`/my-simulations`)**: Dedykowany moduł ze szczegółowym podglądem zapisanych symulacji, dedykowanym edytorem umożliwiającym re-kalkulację na nowych danych oraz usuwaniem.
+- **Zarządzanie Portfelem (`/my-portfolios`)**: Portfele przypisane 1:1 do konkretnych symulacji. Możliwość śledzenia rzeczywistego stanu majątku (akcje, ETF-y, obligacje).
+- **Rzeczywiste Notowania i Waluty**:
+  - Automatyczne kursy walut w czasie rzeczywistym z **NBP API** (USD, EUR, GBP, CHF → PLN).
+  - Automatyczna aktualizacja cen aktywów z giełdy w tle oraz pobieranie cen po tickerze z **Yahoo Finance API** (`yahoo-finance2`).
+- **Silnik Rebalancingu**: Detekcja odchylenia alokacji portfela od celu z symulacji. System generuje ostrzeżenia (progi 5% i 10%) i podpowiada precyzyjne kroki do wykonania w dwóch wariantach: **Wariant A** (Sprzedaj / Kup) oraz **Wariant B** (Sama dopłata nowej gotówki bez sprzedaży).
+
+---
 
 ## Struktura projektu
 
-- .env - lokalne zmienne środowiskowe i sekrety dla bazy danych, auth oraz wysyłki e-maili.
-- .gitignore - lista plików i katalogów wykluczonych z repozytorium.
-- eslint.config.mjs - konfiguracja ESLint dla Next.js i TypeScript.
-- global.d.ts - globalne deklaracje typów dla assetów importowanych w projekcie.
-- next-env.d.ts - typy generowane przez Next.js; plik pomocniczy dla TypeScript.
-- next.config.ts - konfiguracja Next.js, w tym obrazy z Google i opcje auth.
-- package-lock.json - zablokowane wersje zależności npm.
-- package.json - skrypty, zależności i metadane projektu.
-- postcss.config.mjs - konfiguracja PostCSS z Tailwind CSS.
-- prisma.config.ts - konfiguracja CLI Prisma, ścieżki schematu i migracji.
-- README.md - dokumentacja repozytorium.
-- tsconfig.json - konfiguracja TypeScript oraz aliasów importów.
+- `.env` - lokalne zmienne środowiskowe i sekrety dla bazy danych, auth, wysyłki e-maili oraz zewnętrznych API.
+- `.gitignore` - lista plików i katalogów wykluczonych z repozytorium.
+- `eslint.config.mjs` - konfiguracja ESLint dla Next.js i TypeScript.
+- `global.d.ts` - globalne deklaracje typów dla assetów importowanych w projekcie.
+- `next-env.d.ts` - typy generowane przez Next.js; plik pomocniczy dla TypeScript.
+- `next.config.ts` - konfiguracja Next.js, w tym obrazy z Google i opcje auth.
+- `package-lock.json` - zablokowane wersje zależności npm.
+- `package.json` - skrypty, zależności i metadane projektu.
+- `postcss.config.mjs` - konfiguracja PostCSS z Tailwind CSS.
+- `prisma.config.ts` - konfiguracja CLI Prisma, ścieżki schematu i migracji.
+- `README.md` - dokumentacja repozytorium.
+- `tsconfig.json` - konfiguracja TypeScript oraz aliasów importów.
 
-- app/
-  - favicon.ico - ikona aplikacji wyświetlana w przeglądarce.
-  - forbidden.tsx - strona 403 dla braku uprawnień.
-  - globals.css - globalne style, zmienne kolorów i reguły motywów.
-  - layout.tsx - główny layout aplikacji, fonty Geist, ThemeProvider i NotificationProvider.
-  - not-found.tsx - własna strona 404.
-  - unauthorized.tsx - strona 401 z przekierowaniem do logowania.
-  - (auth)/
-    - layout.tsx - layout strefy auth z Header/Footer i przekierowaniami zależnymi od sesji.
-    - forgot-password/
-      - ForgotPassword.tsx - formularz wysyłki prośby o reset hasła.
-      - page.tsx - route strony zapomnianego hasła.
-    - reset-password/
-      - page.tsx - route resetu hasła, sprawdza token w parametrze URL.
-      - ResetPasswordForm.tsx - formularz ustawiania nowego hasła.
-    - sign-in/
-      - page.tsx - route logowania.
-      - SignInForm.tsx - formularz logowania użytkownika.
-    - sign-up/
-      - page.tsx - route rejestracji.
-      - SignUpForm.tsx - formularz tworzenia konta i rejestracji przez Google.
-    - verify-email/
-      - page.tsx - route ekranu weryfikacji e-maila.
-      - VerifyEmail.tsx - widok z możliwością ponownego wysłania maila weryfikacyjnego.
-  - (protected)/
-    - layout.tsx - layout strefy chronionej; wymaga aktywnej sesji.
-    - admin/
-      - page.tsx - chroniona strona administracyjna dla roli ADMIN.
-    - dashboard/
-      - page.tsx - główny dashboard użytkownika.
-    - email-verified/
-      - EmailVerified.tsx - ekran potwierdzający poprawną weryfikację e-maila.
-      - page.tsx - route ekranu po weryfikacji adresu e-mail.
-    - profile/
-      - ChangePasswordForm.tsx - formularz zmiany hasła i unieważniania innych sesji.
-      - page.tsx - route profilu użytkownika.
-      - Profile.tsx - karta profilu z danymi konta i subskrypcji.
-      - ProfilePicture.tsx - upload i podgląd zdjęcia profilowego.
-      - SignOutEverywhereButton.tsx - przycisk wylogowania ze wszystkich urządzeń.
-  - (public)/
-    - layout.tsx - layout publicznych stron z Header/Footer i danymi sesji, jeśli istnieją.
-    - page.tsx - główna strona startowa, renderuje WelcomePage.
-    - WelcomePage.tsx - przykładowa strona powitalna z demonstracyjnym wykresem Recharts.
-    - calculator/
-      - calculator.ts - funkcje obliczeń portfela, składki i symulacji finansowych.
-      - calculatorArchive.ts - archiwalne i komentowane warianty wcześniejszych wzorów kalkulatora.
-      - calculatorAverageData.json - uśrednione dane wejściowe do obliczeń i wykresów.
-      - calculatorData.csv - surowe dane historyczne dla symulacji.
-      - calculatorData.json - ustrukturyzowane dane źródłowe dla symulacji portfela.
-      - page.tsx - route kalkulatora inwestycyjnego.
-  - api/
-    - auth/
-      - [...all]/
-        - route.ts - adapter endpointów better-auth dla logowania, rejestracji, sesji i powiązanych akcji.
-    - calculator/
-      - data/ - katalog przygotowany na dane endpointu kalkulatora.
-    - user/
-      - avatar/
-        - route.ts - upload avatara, walidacja pliku i zapis ścieżki w bazie danych.
-      - email/
-        - route.ts - zapis tymczasowego e-maila do ciasteczka na potrzeby weryfikacji.
+- `app/`
+  - `favicon.ico` - ikona aplikacji wyświetlana w przeglądarce.
+  - `forbidden.tsx` - strona 403 dla braku uprawnień.
+  - `globals.css` - globalne style, zmienne kolorów, reguły motywów oraz style komponentów Ant Design.
+  - `layout.tsx` - główny layout aplikacji, fonty Geist, ThemeProvider i NotificationProvider.
+  - `not-found.tsx` - własna strona 404.
+  - `unauthorized.tsx` - strona 401 z przekierowaniem do logowania.
+  - `(auth)/`
+    - `layout.tsx` - layout strefy auth z Header/Footer i przekierowaniami zależnymi od sesji.
+    - `forgot-password/`
+      - `ForgotPassword.tsx` - formularz wysyłki prośby o reset hasła.
+      - `page.tsx` - route strony zapomnianego hasła.
+    - `reset-password/`
+      - `page.tsx` - route resetu hasła, sprawdza token w parametrze URL.
+      - `ResetPasswordForm.tsx` - formularz ustawiania nowego hasła.
+    - `sign-in/`
+      - `page.tsx` - route logowania.
+      - `SignInForm.tsx` - formularz logowania użytkownika z obsługą reakcji na zapis symulacji.
+    - `sign-up/`
+      - `page.tsx` - route rejestracji.
+      - `SignUpForm.tsx` - formularz tworzenia konta i rejestracji przez Google.
+    - `verify-email/`
+      - `page.tsx` - route ekranu weryfikacji e-maila.
+      - `VerifyEmail.tsx` - widok z możliwością ponownego wysłania maila weryfikacyjnego.
+  - `(protected)/`
+    - `layout.tsx` - layout strefy chronionej z dołączonym `PostAuthHandler`.
+    - `admin/`
+      - `page.tsx` - chroniona strona administracyjna dla roli ADMIN.
+    - `dashboard/`
+      - `page.tsx` - główny dashboard użytkownika.
+    - `email-verified/`
+      - `EmailVerified.tsx` - ekran potwierdzający poprawną weryfikację e-maila.
+      - `page.tsx` - route ekranu po weryfikacji adresu e-mail.
+    - `my-portfolios/`
+      - `page.tsx` - lista wszystkich portfeli użytkownika (`PortfoliosList`).
+      - `[simulationId]/`
+        - `page.tsx` - szczegóły portfela i zarządzanie aktywami (`PortfolioDetails`).
+    - `my-simulations/`
+      - `page.tsx` - lista zapisanych symulacji użytkownika (`SimulationsList`).
+      - `[id]/`
+        - `page.tsx` - podgląd szczegółów zapisanej symulacji (`SimulationDetails`).
+      - `edit/[id]/`
+        - `page.tsx` - dedykowany edytor symulacji z możliwością re-kalkulacji (`SimulationEditor`).
+    - `profile/`
+      - `ChangePasswordForm.tsx` - formularz zmiany hasła otwierany w modalu.
+      - `page.tsx` - route profilu użytkownika.
+      - `Profile.tsx` - karta profilu z danymi konta i subskrypcji.
+      - `ProfilePicture.tsx` - upload i podgląd zdjęcia profilowego.
+      - `SignOutEverywhereButton.tsx` - przycisk wylogowania ze wszystkich urządzeń.
+  - `(public)/`
+    - `layout.tsx` - layout publicznych stron z Header/Footer.
+    - `page.tsx` - strona startowa, renderuje WelcomePage.
+    - `WelcomePage.tsx` - strona powitalna z demonstracyjnym wykresem Recharts.
+    - `calculator/`
+      - `calculator.ts` - funkcje obliczeń portfela, składki i symulacji finansowych.
+      - `calculatorArchive.ts` - archiwalne i komentowane warianty wcześniejszych wzorów kalkulatora.
+      - `calculatorAverageData.json` - uśrednione dane wejściowe do obliczeń i wykresów.
+      - `calculatorData.csv` - surowe dane historyczne dla symulacji.
+      - `calculatorData.json` - ustrukturyzowane dane źródłowe dla symulacji portfela.
+      - `page.tsx` - route kalkulatora inwestycyjnego.
+  - `api/`
+    - `auth/`
+      - `[...all]/route.ts` - adapter endpointów better-auth dla logowania, rejestracji, sesji i OIDC Google.
+    - `fx/`
+      - `route.ts` - pobieranie i cache'owanie aktualnych kursów walut z API NBP (USD, EUR, GBP, CHF).
+    - `portfolios/`
+      - `route.ts` - pobieranie listy wszystkich portfeli użytkownika.
+      - `[simulationId]/`
+        - `route.ts` - pobieranie pojedynczego portfela i danych podpiętej symulacji.
+        - `sync/route.ts` - automatyczna synchronizacja obecnych cen aktywów z giełdy przez Yahoo Finance API.
+        - `assets/`
+          - `route.ts` - dodawanie nowego aktywa do portfela.
+          - `[assetId]/route.ts` - edycja oraz usuwanie aktywa z portfela.
+    - `simulations/`
+      - `route.ts` - pobieranie listy oraz dodawanie nowej symulacji z limitem 3 na użytkownika.
+      - `[id]/route.ts` - pobieranie, aktualizacja (PUT) oraz usuwanie pojedynczej symulacji.
+    - `ticker/`
+      - `route.ts` - endpoint pobierający aktualne notowania cenowe i walutę pojedynczego instrumentu z Yahoo Finance.
+    - `user/`
+      - `avatar/route.ts` - upload avatara, walidacja pliku i zapis ścieżki w bazie danych.
+      - `email/route.ts` - zapis tymczasowego e-maila do ciasteczka na potrzeby weryfikacji.
 
-- prisma/
-  - schema.prisma - schemat bazy danych z modelami auth, rolami i subskrypcjami.
-  - migrations/
-    - migration_lock.toml - blokada konfiguracji migracji Prisma.
-    - 20251229181258_add_auth_models/
-      - migration.sql - migracja tworząca tabele auth.
-    - 20251229212511_add_roles_and_subscription/
-      - migration.sql - migracja dodająca role, status subskrypcji i powiązane pola.
+- `prisma/`
+  - `schema.prisma` - schemat bazy danych (modele auth, SavedSimulation, Portfolio, PortfolioAsset).
+  - `migrations/` - migracje bazy danych PostgreSQL.
 
-- public/
-  - file.svg - statyczny asset SVG z zestawu startowego Next.js.
-  - globe.svg - statyczny asset SVG z zestawu startowego Next.js.
-  - home-background.jpg - obraz tła wykorzystywany w warstwie UI.
-  - next.svg - statyczny asset z logo Next.js.
-  - vercel.svg - statyczny asset z logo Vercel.
-  - window.svg - statyczny asset SVG z zestawu startowego Next.js.
-  - uploads/
-    - avatars/ - zapisane avatary użytkowników, pogrupowane po identyfikatorze konta.
-      - jqKcs3RJugDQjQmwbRh3xSw04LekqjQi/
-        - 1774097141649-99efa6b6-Wallpaper.png.png - przesłany plik avatara użytkownika.
-      - KkMns9uDH1BbznUK5XrQ6sjX7NREJBVF/
-        - 1767484909284-93d5e6a9717f-home-background.jpg.jpg - przesłany plik avatara użytkownika.
-        - 1767484918291-fa1c6c294983-business-avatar-profile-black-icon-man-of-user-symbol-in-trendy-flat-style-isolated-on-male-profile-people-diverse-face-for-social-network-or-web-vector.jpg.jpg - przesłany plik avatara użytkownika.
-        - 1767484923110-54c6cc6b6d12-dc2f368b-8935-42bf-b31b-e8c5eed5265d.jpg.jpg - przesłany plik avatara użytkownika.
-        - 1767484926828-d4cae3b74e20-business-avatar-profile-black-icon-man-of-user-symbol-in-trendy-flat-style-isolated-on-male-profile-people-diverse-face-for-social-network-or-web-vector.jpg.jpg - przesłany plik avatara użytkownika.
-        - 1767485386716-a8016355-home-background.jpg.jpg - przesłany plik avatara użytkownika.
-        - 1767485389639-73bf1c4d-business-avatar-profile-black-icon-man-of-user-symbol-in-trendy-flat-style-isola.jpg - przesłany plik avatara użytkownika.
-        - 1767485797433-ecc233f9-Wallpaper.png.png - przesłany plik avatara użytkownika.
-        - 1767486436391-7a042131-nyan-cat.avif.avif - przesłany plik avatara użytkownika.
-        - 1767486933426-312246aa-business-avatar-profile-black-icon-man-of-user-symbol-in-trendy-flat-style-isola.jpg - przesłany plik avatara użytkownika.
-        - 1767486941828-7d2a8821-home-background.jpg.jpg - przesłany plik avatara użytkownika.
-        - 1767486944445-d673cc68-31efb9a1-c76c-4994-9f26-078df3b87c29.jpg.jpg - przesłany plik avatara użytkownika.
-        - 1767486947564-78d3a39d-business-avatar-profile-black-icon-man-of-user-symbol-in-trendy-flat-style-isola.jpg - przesłany plik avatara użytkownika.
-        - 1767486953401-8e53c6ff-dc2f368b-8935-42bf-b31b-e8c5eed5265d.jpg.jpg - przesłany plik avatara użytkownika.
-        - 1767487018498-224999a2-business-avatar-profile-black-icon-man-of-user-symbol-in-trendy-flat-style-isola.jpg - przesłany plik avatara użytkownika.
-        - 1767487028474-b08a6cb6-home-background.jpg.jpg - przesłany plik avatara użytkownika.
-        - 1767487030692-8e08d036-31efb9a1-c76c-4994-9f26-078df3b87c29.jpg.jpg - przesłany plik avatara użytkownika.
-        - 1767487135934-be71090f-business-avatar-profile-black-icon-man-of-user-symbol-in-trendy-flat-style-isola.jpg - przesłany plik avatara użytkownika.
-        - 1767487143475-38b41928-Zdjcie_Portretowe.jpg.jpg - przesłany plik avatara użytkownika.
-        - 1767488384638-c09f1dd8-business-avatar-profile-black-icon-man-of-user-symbol-in-trendy-flat-style-isola.jpg - przesłany plik avatara użytkownika.
-        - 1767488400032-21e1cb97-Wallpaper.png.png - przesłany plik avatara użytkownika.
-        - 1767488500287-30068d1b-business-avatar-profile-black-icon-man-of-user-symbol-in-trendy-flat-style-isola.jpg - przesłany plik avatara użytkownika.
-        - 1767488527116-0ba5a6b6-home-background.jpg.jpg - przesłany plik avatara użytkownika.
-        - 1767488533079-d1281633-31efb9a1-c76c-4994-9f26-078df3b87c29.jpg.jpg - przesłany plik avatara użytkownika.
-        - 1767488543785-42546e46-Zdjcie_Portretowe.jpg.jpg - przesłany plik avatara użytkownika.
-        - 1767488551398-f9ad2377-Wallpaper.png.png - przesłany plik avatara użytkownika.
-        - 1767489342477-bdf7d019-business-avatar-profile-black-icon-man-of-user-symbol-in-trendy-flat-style-isola.jpg - przesłany plik avatara użytkownika.
-      - Y4yKzVZOJULaowR5cO5gSeXFjtaL0k8K/
-        - 1767489394699-3e19cb8b-business-avatar-profile-black-icon-man-of-user-symbol-in-trendy-flat-style-isola.jpg - przesłany plik avatara użytkownika.
+- `public/`
+  - assety statyczne (logo, obrazy tła, ikony).
+  - `uploads/avatars/` - zapisane avatary użytkowników, pogrupowane po identyfikatorze konta.
 
-- src/
-  - components/
-    - Calculator.tsx - główny kalkulator inwestycyjny z formularzem i wykresami.
-    - Footer.tsx - prosty footer z rokiem i nazwą aplikacji.
-    - Header.tsx - nagłówek aplikacji z nawigacją, przełącznikiem motywu i menu użytkownika.
-    - LoadingPage.tsx - pełnoekranowy ekran ładowania.
-    - NotificationProvider.tsx - kontekst Ant Design notification i hook useNotify.
-    - Notify.tsx - jednorazowy komunikat z przekierowaniem po stronie klienta.
-    - PortfolioMiniChart.tsx - mały wykres portfela oparty na Recharts.
-    - Simulation.tsx - silnik symulacji Monte Carlo dla kalkulatora.
-    - SimulationComparisonChart.tsx - wykres porównawczy symulacji i percentyli.
-    - SimulationNominalTab.tsx - zakładka z podsumowaniem symulacji i rekomendacją składki.
-    - SimulationParametersForm.tsx - formularz parametrów symulacji i alokacji portfela.
-    - ThemeProvider.tsx - provider motywu, synchronizacja z localStorage, cookie i Ant Design.
-    - ThemeToggle.tsx - przycisk przełączania motywu.
-  - generated/
-    - prisma/
-      - browser.ts - wejście klienta Prisma przeznaczone dla środowiska przeglądarkowego.
-      - client.d.ts - deklaracje typów głównego klienta Prisma.
-      - client.js - wygenerowany runtime klienta Prisma.
-      - client.ts - wygenerowane źródło klienta Prisma.
-      - commonInputTypes.ts - wspólne typy wejściowe wygenerowane przez Prisma.
-      - default.d.ts - deklaracje domyślnego eksportu klienta Prisma.
-      - default.js - domyślny eksport wygenerowanego klienta.
-      - edge.d.ts - deklaracje typów dla środowiska edge.
-      - edge.js - klient Prisma dla środowiska edge.
-      - enums.ts - wygenerowane typy enumów z schema.prisma.
-      - index-browser.js - indeks klienta Prisma dla przeglądarki.
-      - index.d.ts - deklaracje głównego indeksu klienta Prisma.
-      - index.js - główny punkt wejścia wygenerowanego klienta.
-      - models.ts - wygenerowane typy modeli bazy danych.
-      - package.json - manifest wygenerowanego pakietu klienta Prisma.
-      - query_compiler_bg.js - loader kompilatora zapytań Prisma w JS.
-      - query_compiler_bg.wasm - binarny moduł WASM kompilatora Prisma.
-      - query_compiler_bg.wasm-base64.js - zakodowana wersja modułu WASM.
-      - schema.prisma - kopia schematu użyta przez wygenerowanego klienta.
-      - wasm-edge-light-loader.mjs - loader WASM dla lekkiego środowiska edge.
-      - wasm-worker-loader.mjs - loader WASM dla workera Prisma.
-      - internal/
-        - class.ts - wewnętrzne klasy bazowe wygenerowanego klienta Prisma.
-        - prismaNamespace.ts - wewnętrzny namespace klienta Prisma.
-        - prismaNamespaceBrowser.ts - browserowa wersja namespace klienta.
-      - models/
-        - Account.ts - wygenerowany model Account.
-        - Session.ts - wygenerowany model Session.
-        - User.ts - wygenerowany model User.
-        - Verification.ts - wygenerowany model Verification.
-      - runtime/
-        - client.d.ts - deklaracje runtime klienta Prisma.
-        - client.js - runtime klienta Prisma.
-        - index-browser.d.ts - deklaracje indeksu runtime dla przeglądarki.
-        - index-browser.js - runtime indeksu dla przeglądarki.
-        - wasm-compiler-edge.js - runtime kompilatora WASM dla edge.
-  - lib/
-    - auth-client.ts - klient better-auth po stronie przeglądarki z pluginem nextCookies.
-    - auth.ts - główna konfiguracja better-auth z Prisma, Google, weryfikacją e-mail i middleware walidującym hasła.
-    - email.ts - wysyłka e-maili przez Resend.
-    - error-utils.ts - normalizacja nieznanych błędów do czytelnych komunikatów.
-    - get-session.ts - cache'owane pobieranie sesji po stronie serwera.
-    - prisma.ts - singleton PrismaClient z adapterem PostgreSQL.
-    - validation.ts - schema Zod dla haseł.
+- `src/`
+  - `components/`
+    - `auth/`
+      - `PostAuthHandler.tsx` - bezobsługowy komponent wyłapujący akcje z `localStorage` po logowaniu przez Google lub po weryfikacji e-maila.
+    - `calculator/`
+      - `Calculator.tsx` - główny interfejs kroków kalkulatora inwestycyjnego.
+      - `PortfolioMiniChart.tsx` - podgląd małego wykresu profilu portfela.
+      - `SaveSimulationModal.tsx` - modal nadawania nazwy i zapisu symulacji.
+      - `Simulation.tsx` - silnik i interfejs symulacji Monte Carlo.
+      - `SimulationComparisonChart.tsx` - wydajny wykres porównawczy symulacji i percentyli (Recharts + `React.memo`).
+      - `SimulationNominalTab.tsx` - zakładka z podsumowaniem symulacji i rekomendacją składki.
+      - `SimulationParametersForm.tsx` - formularz parametrów symulacji i alokacji portfela.
+    - `layout/`
+      - `Footer.tsx` - stopka aplikacji.
+      - `Header.tsx` - nawigacja aplikacji z motywem, bezpośrednim odnośnikiem do profilu i wylogowaniem.
+      - `LoadingPage.tsx` - pełnoekranowy spinner ładowania.
+    - `notifications/`
+      - `NotificationProvider.tsx` - kontekst notyfikacji Ant Design i hook `useNotify`.
+      - `Notify.tsx` - kompilat komunikatów klienckich.
+    - `portfolio/`
+      - `AssetFormModal.tsx` - modal dodawania i edycji aktywa z opcją pobierania ceny z giełdy.
+      - `PortfolioAssetsList.tsx` - lista instrumentów w portfelu.
+      - `PortfolioCard.tsx` - karta portfela w widoku listy z indykatorem statusu rebalancingu.
+      - `PortfolioDetails.tsx` - główny widok szczegółów portfela.
+      - `PortfolioRebalancing.tsx` - moduł wyliczania odchylenia alokacji i propozycji rebalancingu (Wariant A & B).
+      - `PortfoliosList.tsx` - lista wszystkich portfeli użytkownika.
+      - `PortfolioSummary.tsx` - podsumowanie wartości, zysku i alokacji portfela w PLN.
+    - `simulations/`
+      - `EditDiscardConfirmModal.tsx` - modal ostrzegający o odrzuceniu zmian w symulacji.
+      - `EditSaveConfirmModal.tsx` - modal potwierdzający aktualizację symulacji.
+      - `SimulationCard.tsx` - karta zapisanej symulacji na liście.
+      - `SimulationDetails.tsx` - podgląd zapisanej symulacji z wykresem percentyli.
+      - `SimulationEditor.tsx` - edytor symulacji z możliwością re-kalkulacji Monte Carlo.
+      - `SimulationsList.tsx` - lista zapisanych symulacji z licznikiem limitu.
+    - `theme/`
+      - `ThemeProvider.tsx` - provider motywu (localStorage, cookies, Ant Design tokeny).
+      - `ThemeToggle.tsx` - przełącznik motywu jasnego/ciemnego.
+  - `generated/prisma/` - wygenerowany klient bazy danych Prisma.
+  - `lib/`
+    - `auth/`
+      - `auth-client.ts` - klient `better-auth` z pluginem `nextCookies`.
+      - `auth.ts` - konfiguracja `better-auth` z adapterem Prisma i Google Providerem.
+      - `get-session.ts` - pobieranie i cache'owanie sesji po stronie serwera.
+      - `post-auth-actions.ts` - wywoływanie zapisów z `localStorage` po pomyślnej autoryzacji.
+    - `db/`
+      - `prisma.ts` - singleton klienta PrismaClient.
+    - `email/`
+      - `email.ts` - wysyłka e-maili weryfikacyjnych przez Resend.
+    - `portfolio/`
+      - `portfolio-types.ts` - typy DTO dla portfela i aktywów.
+      - `portfolio-utils.ts` - funkcje pomocnicze do przeliczania walut, formatowania kwot i matematyki rebalancingu.
+      - `use-fx-rates.ts` - hook do pobierania i cache'owania kursów NBP po stronie klienta.
+    - `simulation/`
+      - `extract-percentiles.ts` - algorytm wyciągania percentyli (P5, P25, P50, P75, P95) z serii danych.
+      - `pending-simulation.ts` - pomocnik do zarządzania drafatami symulacji w `localStorage`.
+      - `simulation-types.ts` - deklaracje typów dla symulacji.
+    - `utils/`
+      - `error-utils.ts` - normalizacja błędów do komunikatów PL.
+      - `validation.ts` - schematy walidacyjne Zod.

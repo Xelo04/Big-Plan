@@ -351,17 +351,27 @@ export default function SimulationDetails({
           </p>
         </div>
 
-        <Button
-          icon={<EditOutlined />}
-          size="large"
-          onClick={() =>
-            router.push(
-              `/my-simulations/edit/${encodeURIComponent(simulation.id)}`,
-            )
-          }
-        >
-          Edytuj
-        </Button>
+        <div className="flex gap-2">
+          <Button
+            size="large"
+            onClick={() =>
+              router.push(`/my-portfolios/${encodeURIComponent(simulationId)}`)
+            }
+          >
+            Przejdź do portfela
+          </Button>
+          <Button
+            icon={<EditOutlined />}
+            size="large"
+            onClick={() =>
+              router.push(
+                `/my-simulations/edit/${encodeURIComponent(simulation.id)}`,
+              )
+            }
+          >
+            Edytuj
+          </Button>
+        </div>
       </div>
 
       {/* --- Content --- */}

@@ -79,6 +79,7 @@ model Account {
   refreshTokenExpiresAt DateTime?
   scope                 String?
   password              String?
+  issuer                String?
   createdAt             DateTime  @default(now())
   updatedAt             DateTime  @updatedAt
 
@@ -103,7 +104,8 @@ model SavedSimulation {
   name      String   @db.VarChar(80)
   userId    String
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-
+  portfolio Portfolio?
+  
   // Parametry wejściowe
   currentAge       Int
   expectedDeathAge Int
@@ -137,4 +139,39 @@ model SavedSimulation {
 
   @@index([userId])
   @@map("saved_simulation")
+}
+
+model Portfolio {
+  id           String   @id @default(cuid())
+  simulationId String   @unique
+  simulation   SavedSimulation @relation(fields: [simulationId], references: [id], onDelete: Cascade)
+
+  assets       PortfolioAsset[]
+
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@map("portfolio")
+}
+
+model PortfolioAsset {
+  id           String   @id @default(cuid())
+  portfolioId  String
+  portfolio    Portfolio @relation(fields: [portfolioId], references: [id], onDelete: Cascade)
+
+  name         String   @db.VarChar(120)
+  ticker       String?  @db.VarChar(20)
+  category     String   @db.VarChar(20) // "STOCKS" | "BONDS" | (przyszłość: "OTHER")
+
+  quantity     Float
+  averagePrice Float                    // cena zakupu w walucie instrumentu
+  currentPrice Float                    // aktualna cena za sztukę (na razie ręcznie)
+  currency     String   @default("PLN") @db.VarChar(10)
+  customFxRate Float?                   // opcjonalny ręczny kurs → PLN
+
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([portfolioId])
+  @@map("portfolio_asset")
 }

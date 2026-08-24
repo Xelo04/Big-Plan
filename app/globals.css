@@ -148,6 +148,7 @@ html.dark body {
     rgba(7, 18, 48, 1) 80%,
     rgb(13, 23, 54) 95%
   );
+  background-attachment: fixed;
 }
 
 :root[data-theme="light"] body {

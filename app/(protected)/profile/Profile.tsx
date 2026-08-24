@@ -1,20 +1,24 @@
 "use client";
 
+import { useState } from "react";
 import ProfilePicture from "./ProfilePicture";
-import { Card, Typography, Divider } from "antd";
+import { Card, Typography, Divider, Button } from "antd";
 import {
   UserOutlined,
   MailOutlined,
   CalendarOutlined,
   TagOutlined,
+  KeyOutlined,
 } from "@ant-design/icons";
 import { User } from "@/src/lib/auth/auth";
 import ChangePasswordForm from "./ChangePasswordForm";
+import SignOutEverywhereButton from "./SignOutEverywhereButton";
 
 const { Title, Text } = Typography;
 
 export default function Profile({ user }: { user: User }) {
   const planKey = (user.subscriptionPlan || "free").toString().toLowerCase();
+  const [passwordModalOpen, setPasswordModalOpen] = useState(false);
 
   return (
     <main
@@ -171,11 +175,31 @@ export default function Profile({ user }: { user: User }) {
                   </div>
                 </div>
               </div>
+
+              <Divider style={{ margin: "24px 0 18px" }} />
+
+              {/* Dół karty z akcjami */}
+              <div className="flex flex-wrap items-center justify-between gap-4">
+                <Button
+                  type="default"
+                  size="large"
+                  icon={<KeyOutlined />}
+                  onClick={() => setPasswordModalOpen(true)}
+                >
+                  Zmień hasło
+                </Button>
+
+                <SignOutEverywhereButton />
+              </div>
             </div>
           </div>
         </Card>
       </section>
-      <ChangePasswordForm />
+
+      <ChangePasswordForm
+        open={passwordModalOpen}
+        onCancel={() => setPasswordModalOpen(false)}
+      />
     </main>
   );
 }
