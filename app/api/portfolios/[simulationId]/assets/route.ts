@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import prisma from "@/src/lib/db/prisma";
 import { getSession } from "@/src/lib/auth/get-session";
+import { getSupabaseAdmin, newId } from "@/src/lib/db/supabase";
 
 const createAssetSchema = z.object({
   name: z.string().trim().min(1).max(120),
@@ -25,19 +25,21 @@ export async function POST(
     }
 
     const { simulationId } = await params;
+    const supabase = getSupabaseAdmin();
 
-    const simulation = await prisma.savedSimulation.findUnique({
-      where: { id: simulationId },
-      select: { userId: true },
-    });
+    const { data: simulation, error: simError } = await supabase
+      .from("saved_simulation")
+      .select("userId")
+      .eq("id", simulationId)
+      .maybeSingle();
 
+    if (simError) throw simError;
     if (!simulation || simulation.userId !== session.user.id) {
       return NextResponse.json({ error: "Brak dostępu." }, { status: 403 });
     }
 
     const body = await req.json();
     const parsed = createAssetSchema.safeParse(body);
-
     if (!parsed.success) {
       return NextResponse.json(
         { error: "Nieprawidłowe dane." },
@@ -45,18 +47,54 @@ export async function POST(
       );
     }
 
-    const portfolio = await prisma.portfolio.upsert({
-      where: { simulationId },
-      create: { simulationId },
-      update: {},
-    });
+    // upsert portfolio
+    let portfolioId: string;
+    const { data: existingPortfolio } = await supabase
+      .from("portfolio")
+      .select("id")
+      .eq("simulationId", simulationId)
+      .maybeSingle();
 
-    const asset = await prisma.portfolioAsset.create({
-      data: {
-        portfolioId: portfolio.id,
-        ...parsed.data,
-      },
-    });
+    if (existingPortfolio?.id) {
+      portfolioId = existingPortfolio.id;
+    } else {
+      const pid = newId();
+      const now = new Date().toISOString();
+      const { data: created, error: createPortError } = await supabase
+        .from("portfolio")
+        .insert({
+          id: pid,
+          simulationId,
+          createdAt: now,
+          updatedAt: now,
+        })
+        .select("id")
+        .single();
+      if (createPortError) throw createPortError;
+      portfolioId = created.id;
+    }
+
+    const now = new Date().toISOString();
+    const { data: asset, error: assetError } = await supabase
+      .from("portfolio_asset")
+      .insert({
+        id: newId(),
+        portfolioId,
+        name: parsed.data.name,
+        ticker: parsed.data.ticker ?? null,
+        category: parsed.data.category,
+        quantity: parsed.data.quantity,
+        averagePrice: parsed.data.averagePrice,
+        currentPrice: parsed.data.currentPrice,
+        currency: parsed.data.currency,
+        customFxRate: parsed.data.customFxRate ?? null,
+        createdAt: now,
+        updatedAt: now,
+      })
+      .select("*")
+      .single();
+
+    if (assetError) throw assetError;
 
     return NextResponse.json({ ok: true, asset }, { status: 201 });
   } catch (err) {

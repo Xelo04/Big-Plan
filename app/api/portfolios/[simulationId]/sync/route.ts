@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
-import prisma from "@/src/lib/db/prisma";
-import { getSession } from "@/src/lib/auth/get-session";
 import YahooFinance from "yahoo-finance2";
+import { getSession } from "@/src/lib/auth/get-session";
+import { getSupabaseAdmin } from "@/src/lib/db/supabase";
 
 type YahooQuote = {
   symbol?: string;
@@ -11,7 +11,7 @@ type YahooQuote = {
 const yahooFinance = new YahooFinance();
 
 export async function POST(
-  req: Request,
+  _req: Request,
   { params }: { params: Promise<{ simulationId: string }> },
 ) {
   try {
@@ -21,22 +21,35 @@ export async function POST(
     }
 
     const { simulationId } = await params;
+    const supabase = getSupabaseAdmin();
 
-    // Pobierz portfel z aktywami
-    const portfolio = await prisma.portfolio.findUnique({
-      where: { simulationId },
-      include: { assets: true },
-    });
+    // auth check
+    const { data: simulation } = await supabase
+      .from("saved_simulation")
+      .select("userId")
+      .eq("id", simulationId)
+      .maybeSingle();
 
-    if (!portfolio || portfolio.assets.length === 0) {
+    if (!simulation || simulation.userId !== session.user.id) {
+      return NextResponse.json({ error: "Brak dostępu" }, { status: 403 });
+    }
+
+    const { data: portfolio } = await supabase
+      .from("portfolio")
+      .select("id, assets:portfolio_asset(id, ticker, currentPrice)")
+      .eq("simulationId", simulationId)
+      .maybeSingle();
+
+    if (!portfolio?.assets?.length) {
       return NextResponse.json(
         { ok: true, message: "Pusty portfel" },
         { status: 200 },
       );
     }
 
-    // Filtrujemy tylko aktywa, które mają ticker
-    const assetsWithTickers = portfolio.assets.filter((a) => a.ticker);
+    const assetsWithTickers = portfolio.assets.filter(
+      (a: { ticker: string | null }) => a.ticker,
+    );
 
     if (assetsWithTickers.length === 0) {
       return NextResponse.json(
@@ -45,32 +58,34 @@ export async function POST(
       );
     }
 
-    // Pobieramy notowania masowo z Yahoo
-    const symbols = assetsWithTickers.map((a) => a.ticker as string);
-
+    const symbols = assetsWithTickers.map((a: { ticker: string }) => a.ticker);
     const rawQuotes = await yahooFinance.quote(symbols);
     const quotesList = (
       Array.isArray(rawQuotes) ? rawQuotes : [rawQuotes]
     ) as YahooQuote[];
 
-    // Aktualizujemy bazę danych
-    const updatePromises = assetsWithTickers.map((asset) => {
-      const quote = quotesList.find(
-        (q) => q.symbol?.toUpperCase() === asset.ticker?.toUpperCase(),
-      );
-
-      if (quote && typeof quote.regularMarketPrice === "number") {
-        if (quote.regularMarketPrice !== asset.currentPrice) {
-          return prisma.portfolioAsset.update({
-            where: { id: asset.id },
-            data: { currentPrice: quote.regularMarketPrice },
-          });
-        }
-      }
-      return Promise.resolve();
-    });
-
-    await Promise.all(updatePromises);
+    await Promise.all(
+      assetsWithTickers.map(
+        async (asset: { id: string; ticker: string; currentPrice: number }) => {
+          const quote = quotesList.find(
+            (q) => q.symbol?.toUpperCase() === asset.ticker?.toUpperCase(),
+          );
+          if (
+            quote &&
+            typeof quote.regularMarketPrice === "number" &&
+            quote.regularMarketPrice !== asset.currentPrice
+          ) {
+            await supabase
+              .from("portfolio_asset")
+              .update({
+                currentPrice: quote.regularMarketPrice,
+                updatedAt: new Date().toISOString(),
+              })
+              .eq("id", asset.id);
+          }
+        },
+      ),
+    );
 
     return NextResponse.json({ ok: true }, { status: 200 });
   } catch (error) {

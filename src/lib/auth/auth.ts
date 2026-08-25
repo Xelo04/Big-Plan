@@ -1,14 +1,19 @@
 import { betterAuth } from "better-auth";
-import { prismaAdapter } from "better-auth/adapters/prisma";
-import prisma from "../db/prisma";
 import { APIError, createAuthMiddleware } from "better-auth/api";
+import { Pool } from "pg";
 import { passwordSchema } from "../utils/validation";
 import { sendEmail } from "../email/email";
 
+// Pool do tabel auth (user/session/account/verification)
+// Na Netlify/serverless lepiej DATABASE_URL (pooler 6543)
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL || process.env.DIRECT_URL,
+  // opcjonalnie przy poolerze Supabase:
+  // ssl: { rejectUnauthorized: false },
+});
+
 export const auth = betterAuth({
-  database: prismaAdapter(prisma, {
-    provider: "postgresql",
-  }),
+  database: pool,
   socialProviders: {
     google: {
       clientId: process.env.GOOGLE_CLIENT_ID!,
@@ -23,7 +28,7 @@ export const auth = betterAuth({
         to: user.email,
         subject: "Reset your password",
         html: `<p>Please reset your password by clicking the link below:</p>
-               <a href="${url}">${url}</a>`, // TODO Ulepszyć szablon emaila poprzez REACT EMAIL
+               <a href="${url}">${url}</a>`,
       });
     },
   },
@@ -35,21 +40,14 @@ export const auth = betterAuth({
         to: user.email,
         subject: "Verify your email",
         html: `<p>Please verify your email by clicking the link below:</p>
-               <a href="${url}">${url}</a>`, // TODO Ulepszyć szablon emaila poprzez REACT EMAIL
+               <a href="${url}">${url}</a>`,
       });
     },
   },
   user: {
     additionalFields: {
-      // TODO Dodać dodatkowe pola do usera
-      role: {
-        type: "string",
-        input: false, // ustawione na false, aby pole nie było edytowalne przez użytkownika
-      },
-      subscriptionPlan: {
-        type: "string",
-        input: false,
-      },
+      role: { type: "string", input: false },
+      subscriptionPlan: { type: "string", input: false },
       wants_newsletter: {
         type: "boolean",
         input: true,
@@ -58,9 +56,7 @@ export const auth = betterAuth({
     },
   },
   hooks: {
-    // Będzie wywoływane przed każdym zapytaniem better-auth
     before: createAuthMiddleware(async (ctx) => {
-      //TODO Dodać ścieżki, które mają spełniać wymaganie hasła
       if (
         ctx.path === "/sign-up/email" ||
         ctx.path === "/reset-password" ||
@@ -80,9 +76,12 @@ export const auth = betterAuth({
       }
     }),
   },
-  trustedOrigins: ["http://localhost:3001"], // TODO Do zmiany przy produkcji
+  trustedOrigins: [
+    "http://localhost:3000",
+    "http://localhost:3001",
+    process.env.NEXT_PUBLIC_APP_URL,
+  ].filter(Boolean) as string[],
 });
 
 export type Session = typeof auth.$Infer.Session;
 export type User = typeof auth.$Infer.Session.user;
-// można użyć tych typów w całej aplikacji do typowania sesji i użytkownika importując je z /lib/auth.ts

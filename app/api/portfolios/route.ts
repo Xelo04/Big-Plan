@@ -1,11 +1,10 @@
 import { NextResponse } from "next/server";
-import prisma from "@/src/lib/db/prisma";
 import { getSession } from "@/src/lib/auth/get-session";
+import { getSupabaseAdmin } from "@/src/lib/db/supabase";
 
 export async function GET() {
   try {
     const session = await getSession();
-
     if (!session?.user?.id) {
       return NextResponse.json(
         { error: "Brak aktywnej sesji." },
@@ -13,34 +12,40 @@ export async function GET() {
       );
     }
 
-    // Pobierz wszystkie symulacje usera wraz z ich ewentualnymi portfelami
-    const simulations = await prisma.savedSimulation.findMany({
-      where: { userId: session.user.id },
-      orderBy: { updatedAt: "desc" },
-      select: {
-        id: true,
-        name: true,
-        stocksPct: true,
-        bondsPct: true,
-        updatedAt: true,
-        portfolio: {
-          include: {
-            assets: true,
-          },
-        },
-      },
-    });
+    const supabase = getSupabaseAdmin();
 
-    const items = simulations.map((sim) => ({
-      simulation: {
-        id: sim.id,
-        name: sim.name,
-        stocksPct: sim.stocksPct,
-        bondsPct: sim.bondsPct,
-        updatedAt: sim.updatedAt,
-      },
-      portfolio: sim.portfolio,
-    }));
+    const { data: simulations, error } = await supabase
+      .from("saved_simulation")
+      .select(
+        `
+        id, name, stocksPct, bondsPct, updatedAt,
+        portfolio:portfolio (
+          id, simulationId, createdAt, updatedAt,
+          assets:portfolio_asset (*)
+        )
+      `,
+      )
+      .eq("userId", session.user.id)
+      .order("updatedAt", { ascending: false });
+
+    if (error) throw error;
+
+    const items = (simulations ?? []).map((sim) => {
+      // supabase może zwrócić portfolio jako obiekt lub tablicę przy join
+      const raw = sim.portfolio as unknown;
+      const portfolio = Array.isArray(raw) ? (raw[0] ?? null) : (raw ?? null);
+
+      return {
+        simulation: {
+          id: sim.id,
+          name: sim.name,
+          stocksPct: sim.stocksPct,
+          bondsPct: sim.bondsPct,
+          updatedAt: sim.updatedAt,
+        },
+        portfolio,
+      };
+    });
 
     return NextResponse.json({ items }, { status: 200 });
   } catch (err) {

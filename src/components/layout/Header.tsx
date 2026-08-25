@@ -59,27 +59,24 @@ export default function Header({ user }: { user: User | null }) {
             {user ? (
               <>
                 <Tooltip title="Mój profil">
-                  <Button
-                    type="default"
-                    shape="circle"
-                    size="large"
+                  <button
+                    type="button"
                     onClick={() => router.push("/profile")}
-                    className="btn-rounded-custom w-10 h-10 p-0 text-xl flex items-center justify-center overflow-hidden border-(--btn-border) cursor-pointer"
-                    icon={
-                      user.image ? (
-                        <div className="relative w-full h-full rounded-full overflow-hidden">
-                          <Image
-                            src={user.image}
-                            alt={`${user.name}`}
-                            fill
-                            style={{ objectFit: "cover", display: "block" }}
-                          />
-                        </div>
-                      ) : (
-                        <UserOutlined style={{ fontSize: 18 }} />
-                      )
-                    }
-                  />
+                    className="w-10 h-10 rounded-full border border-(--btn-border) flex items-center justify-center overflow-hidden cursor-pointer hover:border-(--cta-from) transition-colors bg-(--btn-bg)"
+                  >
+                    {user.image ? (
+                      <Image
+                        src={user.image}
+                        alt={user.name || "Avatar"}
+                        width={36}
+                        height={36}
+                        className="w-full h-full object-cover rounded-full"
+                        unoptimized
+                      />
+                    ) : (
+                      <UserOutlined style={{ fontSize: 18 }} />
+                    )}
+                  </button>
                 </Tooltip>
 
                 <Tooltip title="Wyloguj się">

@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import prisma from "@/src/lib/db/prisma";
 import { getSession } from "@/src/lib/auth/get-session";
+import { getSupabaseAdmin } from "@/src/lib/db/supabase";
 
 const updateAssetSchema = z.object({
   name: z.string().trim().min(1).max(120),
@@ -19,23 +19,39 @@ async function verifyOwnership(
   assetId: string,
   userId: string,
 ) {
-  const asset = await prisma.portfolioAsset.findUnique({
-    where: { id: assetId },
-    include: {
-      portfolio: {
-        include: { simulation: { select: { userId: true, id: true } } },
-      },
-    },
-  });
+  const supabase = getSupabaseAdmin();
+  const { data: asset, error } = await supabase
+    .from("portfolio_asset")
+    .select(
+      `
+      id,
+      portfolio:portfolio!inner (
+        id,
+        simulationId,
+        simulation:saved_simulation!inner (
+          id,
+          userId
+        )
+      )
+    `,
+    )
+    .eq("id", assetId)
+    .maybeSingle();
 
-  if (
-    !asset ||
-    asset.portfolio.simulation.id !== simulationId ||
-    asset.portfolio.simulation.userId !== userId
-  ) {
-    return false;
-  }
-  return true;
+  if (error || !asset) return false;
+
+  const portfolio = Array.isArray(asset.portfolio)
+    ? asset.portfolio[0]
+    : asset.portfolio;
+  if (!portfolio) return false;
+
+  const simulation = Array.isArray(portfolio.simulation)
+    ? portfolio.simulation[0]
+    : portfolio.simulation;
+
+  return (
+    portfolio.simulationId === simulationId && simulation?.userId === userId
+  );
 }
 
 export async function PUT(
@@ -44,8 +60,9 @@ export async function PUT(
 ) {
   try {
     const session = await getSession();
-    if (!session?.user?.id)
+    if (!session?.user?.id) {
       return NextResponse.json({ error: "Brak sesji." }, { status: 401 });
+    }
 
     const { simulationId, assetId } = await params;
     if (!(await verifyOwnership(simulationId, assetId, session.user.id))) {
@@ -54,14 +71,24 @@ export async function PUT(
 
     const body = await req.json();
     const parsed = updateAssetSchema.safeParse(body);
-    if (!parsed.success)
+    if (!parsed.success) {
       return NextResponse.json({ error: "Złe dane." }, { status: 400 });
+    }
 
-    const asset = await prisma.portfolioAsset.update({
-      where: { id: assetId },
-      data: parsed.data,
-    });
+    const supabase = getSupabaseAdmin();
+    const { data: asset, error } = await supabase
+      .from("portfolio_asset")
+      .update({
+        ...parsed.data,
+        ticker: parsed.data.ticker ?? null,
+        customFxRate: parsed.data.customFxRate ?? null,
+        updatedAt: new Date().toISOString(),
+      })
+      .eq("id", assetId)
+      .select("*")
+      .single();
 
+    if (error) throw error;
     return NextResponse.json({ ok: true, asset }, { status: 200 });
   } catch {
     return NextResponse.json({ error: "Błąd serwera." }, { status: 500 });
@@ -74,15 +101,22 @@ export async function DELETE(
 ) {
   try {
     const session = await getSession();
-    if (!session?.user?.id)
+    if (!session?.user?.id) {
       return NextResponse.json({ error: "Brak sesji." }, { status: 401 });
+    }
 
     const { simulationId, assetId } = await params;
     if (!(await verifyOwnership(simulationId, assetId, session.user.id))) {
       return NextResponse.json({ error: "Brak dostępu." }, { status: 403 });
     }
 
-    await prisma.portfolioAsset.delete({ where: { id: assetId } });
+    const supabase = getSupabaseAdmin();
+    const { error } = await supabase
+      .from("portfolio_asset")
+      .delete()
+      .eq("id", assetId);
+
+    if (error) throw error;
     return NextResponse.json({ ok: true }, { status: 200 });
   } catch {
     return NextResponse.json({ error: "Błąd serwera." }, { status: 500 });
