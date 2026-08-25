@@ -3,13 +3,14 @@ import { APIError, createAuthMiddleware } from "better-auth/api";
 import { Pool } from "pg";
 import { passwordSchema } from "../utils/validation";
 import { sendEmail } from "../email/email";
+import {
+  getVerificationEmailHtml,
+  getResetPasswordEmailHtml,
+} from "../email/email-templates";
 
-// Pool do tabel auth (user/session/account/verification)
-// Na Netlify/serverless lepiej DATABASE_URL (pooler 6543)
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL || process.env.DIRECT_URL,
-  // opcjonalnie przy poolerze Supabase:
-  // ssl: { rejectUnauthorized: false },
+  ssl: { rejectUnauthorized: false },
 });
 
 export const auth = betterAuth({
@@ -26,9 +27,8 @@ export const auth = betterAuth({
     async sendResetPassword({ user, url }) {
       await sendEmail({
         to: user.email,
-        subject: "Reset your password",
-        html: `<p>Please reset your password by clicking the link below:</p>
-               <a href="${url}">${url}</a>`,
+        subject: "Resetowanie hasła - Big Plan",
+        html: getResetPasswordEmailHtml({ url, userName: user.name }),
       });
     },
   },
@@ -38,9 +38,8 @@ export const auth = betterAuth({
     async sendVerificationEmail({ user, url }) {
       await sendEmail({
         to: user.email,
-        subject: "Verify your email",
-        html: `<p>Please verify your email by clicking the link below:</p>
-               <a href="${url}">${url}</a>`,
+        subject: "Potwierdź swój adres e-mail - Big Plan",
+        html: getVerificationEmailHtml({ url, userName: user.name }),
       });
     },
   },
@@ -70,7 +69,7 @@ export const auth = betterAuth({
             .filter(Boolean)
             .join(", ");
           throw new APIError("BAD_REQUEST", {
-            message: messages || "Invalid input",
+            message: messages || "Nieprawidłowe hasło",
           });
         }
       }
@@ -78,7 +77,6 @@ export const auth = betterAuth({
   },
   trustedOrigins: [
     "http://localhost:3000",
-    "http://localhost:3001",
     process.env.NEXT_PUBLIC_APP_URL,
   ].filter(Boolean) as string[],
 });

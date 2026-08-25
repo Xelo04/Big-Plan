@@ -5,5 +5,3 @@ export default async function DashboardPage() {
     </main>
   );
 }
-// TODO Deployment
-// https://www.youtube.com/watch?v=w5Emwt3nuV0

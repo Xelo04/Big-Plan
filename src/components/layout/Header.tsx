@@ -16,10 +16,14 @@ export default function Header({ user }: { user: User | null }) {
   const [loading, setLoading] = useState(false);
 
   const handleSignOut = async () => {
-    setLoading(true);
-    await authClient.signOut();
-    router.push("/");
-    setLoading(false);
+    try {
+      setLoading(true);
+      await authClient.signOut();
+      window.location.href = "/";
+    } catch (error) {
+      console.error("Sign out error:", error);
+      setLoading(false);
+    }
   };
 
   if (loading) return <LoadingPage />;
@@ -32,26 +36,29 @@ export default function Header({ user }: { user: User | null }) {
         </Link>
 
         <div className="flex items-center gap-6">
-          <nav className="hidden sm:flex gap-5">
-            <Link
-              href="/calculator"
-              className="text-sm hover:text-(--cta-from) transition-colors"
-            >
-              Kalkulator
-            </Link>
-            <Link
-              href="/my-simulations"
-              className="text-sm hover:text-(--cta-from) transition-colors"
-            >
-              Moje symulacje
-            </Link>
-            <Link
-              href="/my-portfolios"
-              className="text-sm hover:text-(--cta-from) transition-colors"
-            >
-              Moje portfele
-            </Link>
-          </nav>
+          {/* Nawigacja widoczna dla zalogowanych użytkowników */}
+          {user && (
+            <nav className="hidden sm:flex gap-5">
+              <Link
+                href="/calculator"
+                className="text-sm hover:text-(--cta-from) transition-colors"
+              >
+                Kalkulator
+              </Link>
+              <Link
+                href="/my-simulations"
+                className="text-sm hover:text-(--cta-from) transition-colors"
+              >
+                Moje symulacje
+              </Link>
+              <Link
+                href="/my-portfolios"
+                className="text-sm hover:text-(--cta-from) transition-colors"
+              >
+                Moje portfele
+              </Link>
+            </nav>
+          )}
 
           <div className="flex items-center gap-3">
             <ThemeToggle />
