@@ -22,6 +22,7 @@ export type PendingSimulationResults = {
     monthlyNeed: number;
     stocksPct: number;
     monthlyInvestment: number;
+    currentPortfolioValue: number;
   };
   totalSimulations: number;
 };
@@ -82,6 +83,7 @@ export function pendingSimulationToPayload(
     statePensionAge: inputs.statePensionAge,
     estimatedPension: inputs.estimatedPension,
     monthlyNeed: inputs.monthlyNeed,
+    currentPortfolioValue: inputs.currentPortfolioValue ?? 0,
     stocksPct: inputs.stocksPct,
     bondsPct: 100 - inputs.stocksPct,
     knowsMonthlyAmount: pending.knowsMonthlyAmount,
