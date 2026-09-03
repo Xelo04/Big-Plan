@@ -31,14 +31,28 @@ export default function Header({ user }: { user: User | null }) {
   return (
     <header className="w-full px-4 py-3 border-b border-(--btn-border) bg-(--bg) text-(--text)">
       <div className="max-w-7xl mx-auto flex items-center justify-between">
-        <Link href="/" className="text-lg font-semibold">
-          Big Plan
+        <Link href="/" className="flex items-center gap-2.5 group">
+          <Image
+            src="/logo.png"
+            alt="Big Plan Logo"
+            width={32}
+            height={32}
+            className="w-8 h-8 object-contain transition-transform group-hover:scale-105"
+            priority
+          />
+          <span className="text-lg font-semibold tracking-tight">Big Plan</span>
         </Link>
 
         <div className="flex items-center gap-6">
           {/* Nawigacja widoczna dla zalogowanych użytkowników */}
           {user && (
             <nav className="hidden sm:flex gap-5">
+              <Link
+                href="/dashboard"
+                className="text-sm hover:text-(--cta-from) transition-colors"
+              >
+                Dashboard
+              </Link>
               <Link
                 href="/calculator"
                 className="text-sm hover:text-(--cta-from) transition-colors"
@@ -103,7 +117,7 @@ export default function Header({ user }: { user: User | null }) {
                   className="btn-color-up"
                   onClick={() => router.push("/sign-up")}
                 >
-                  Zacznij Inwestować
+                  Stwórz plan
                 </button>
                 <button
                   className="btn-no-color"

@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useState } from "react";
 import { Button, Modal } from "antd";
 import {
   ExclamationCircleFilled,
@@ -14,43 +14,19 @@ import type { SavedSimulationDTO } from "@/src/lib/simulation/simulation-types";
 
 const MAX_SIMULATIONS = 3;
 
-export default function SimulationsList() {
+export default function SimulationsList({
+  initialSimulations,
+}: {
+  initialSimulations: SavedSimulationDTO[];
+}) {
   const router = useRouter();
   const notify = useNotify();
   const [modal, modalContextHolder] = Modal.useModal();
 
-  const [simulations, setSimulations] = useState<SavedSimulationDTO[]>([]);
-  const [loading, setLoading] = useState(true);
+  // Używamy danych z serwera jako stanu początkowego, by usunięcia działały natychmiast (optimistic UI)
+  const [simulations, setSimulations] =
+    useState<SavedSimulationDTO[]>(initialSimulations);
   const [deletingId, setDeletingId] = useState<string | null>(null);
-
-  const fetchSimulations = useCallback(async () => {
-    try {
-      const res = await fetch("/api/simulations", {
-        credentials: "include",
-      });
-      if (!res.ok) {
-        notify.error({
-          title: "Nie udało się pobrać symulacji",
-          description: "Spróbuj odświeżyć stronę.",
-        });
-        return;
-      }
-      const data = (await res.json()) as { simulations: SavedSimulationDTO[] };
-      setSimulations(data.simulations);
-    } catch (err) {
-      console.error("fetchSimulations error:", err);
-      notify.error({
-        title: "Nie udało się pobrać symulacji",
-        description: "Sprawdź połączenie internetowe.",
-      });
-    } finally {
-      setLoading(false);
-    }
-  }, [notify]);
-
-  useEffect(() => {
-    fetchSimulations();
-  }, [fetchSimulations]);
 
   const handleDelete = (id: string) => {
     const target = simulations.find((s) => s.id === id);
@@ -79,25 +55,16 @@ export default function SimulationsList() {
               credentials: "include",
             },
           );
-          const data = (await res.json()) as { error?: string };
-
-          if (!res.ok) {
-            notify.error({
-              title: "Nie udało się usunąć symulacji",
-              description: data.error ?? "Spróbuj ponownie.",
-            });
-            return;
-          }
-
+          if (!res.ok) throw new Error();
           setSimulations((prev) => prev.filter((s) => s.id !== id));
           notify.success({
             title: "Symulacja usunięta",
             description: `"${target.name}" została usunięta.`,
           });
-        } catch (err) {
-          console.error("delete simulation error:", err);
+          router.refresh(); // Aktualizuje dane na serwerze w tle
+        } catch {
           notify.error({
-            title: "Nie udało się usunąć symulacji",
+            title: "Błąd",
             description: "Wystąpił nieoczekiwany błąd.",
           });
         } finally {
@@ -108,30 +75,6 @@ export default function SimulationsList() {
   };
 
   const canAddMore = simulations.length < MAX_SIMULATIONS;
-
-  if (loading) {
-    return (
-      <div className="w-full max-w-4xl mx-auto p-6">
-        {modalContextHolder}
-        <div className="flex items-center justify-between mb-6">
-          <div>
-            <h1 className="text-2xl md:text-3xl font-semibold text-(--text)">
-              Moje symulacje
-            </h1>
-          </div>
-        </div>
-        <div className="flex flex-col gap-4">
-          {[1, 2].map((i) => (
-            <div
-              key={i}
-              className="h-64 rounded-2xl border border-(--btn-border) animate-pulse"
-              style={{ background: "var(--card-background)" }}
-            />
-          ))}
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="w-full max-w-4xl mx-auto p-6">

@@ -18,13 +18,12 @@ import EditDiscardConfirmModal from "./EditDiscardConfirmModal";
 import { wartosciPortfelaSymulacja } from "@/app/(public)/calculator/calculator";
 import { extractPercentiles } from "@/src/lib/simulation/extract-percentiles";
 import type {
-  PercentilePoint,
   SavedSimulationDTO,
   UpdateSimulationPayload,
 } from "@/src/lib/simulation/simulation-types";
 
 type SimulationEditorProps = {
-  simulationId: string;
+  initialSimulation: SavedSimulationDTO | null;
 };
 
 type SimulationResult = {
@@ -41,6 +40,7 @@ type SimulationInputs = {
   monthlyNeed: number;
   stocksPct: number;
   monthlyInvestment: number;
+  currentPortfolioValue: number;
 };
 
 const MAX_NAME_LENGTH = 80;
@@ -56,130 +56,15 @@ const sameInputs = (a: SimulationInputs | null, b: SimulationInputs | null) =>
   a.estimatedPension === b.estimatedPension &&
   a.monthlyNeed === b.monthlyNeed &&
   a.stocksPct === b.stocksPct &&
-  a.monthlyInvestment === b.monthlyInvestment;
+  a.monthlyInvestment === b.monthlyInvestment &&
+  a.currentPortfolioValue === b.currentPortfolioValue;
 
 export default function SimulationEditor({
-  simulationId,
+  initialSimulation,
 }: SimulationEditorProps) {
   const router = useRouter();
   const notify = useNotify();
 
-  // --- Loaded simulation ---
-  const [original, setOriginal] = useState<SavedSimulationDTO | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [notFound, setNotFound] = useState(false);
-
-  // --- Editable state ---
-  const [name, setName] = useState("");
-  const [draftInputs, setDraftInputs] = useState<SimulationInputs>({
-    currentAge: 0,
-    expectedDeathAge: 0,
-    workEndAge: 0,
-    statePensionAge: 0,
-    estimatedPension: 0,
-    monthlyNeed: 0,
-    stocksPct: 100,
-    monthlyInvestment: 0,
-  });
-
-  // --- Last run inputs ---
-  const [lastRunInputs, setLastRunInputs] = useState<SimulationInputs | null>(
-    null,
-  );
-
-  // --- Simulation results ---
-  const [results, setResults] = useState<SimulationResult[]>([]);
-  const [userPaymentResults, setUserPaymentResults] = useState<
-    SimulationResult[]
-  >([]);
-  const [calibratedMonthlyPayment, setCalibratedMonthlyPayment] = useState<
-    number | null
-  >(null);
-  const [simulationSuccessRate, setSimulationSuccessRate] = useState<
-    number | null
-  >(null);
-  const [userSimulationSuccessRate, setUserSimulationSuccessRate] = useState<
-    number | null
-  >(null);
-
-  // --- Precomputed percentiles from DB ---
-  const [initialRecommendedPercentiles, setInitialRecommendedPercentiles] =
-    useState<PercentilePoint[] | null>(null);
-  const [initialUserPercentiles, setInitialUserPercentiles] = useState<
-    PercentilePoint[] | null
-  >(null);
-  const [hasRecomputed, setHasRecomputed] = useState(false);
-
-  // --- Loading/dirty state ---
-  const [isRecomputing, setIsRecomputing] = useState(false);
-  const [isSaving, setIsSaving] = useState(false);
-  const [chartRenderKey, setChartRenderKey] = useState(0);
-  const [saveModalOpen, setSaveModalOpen] = useState(false);
-  const [discardModalOpen, setDiscardModalOpen] = useState(false);
-
-  // --- Refs for Monte Carlo scheduling ---
-  const runIdRef = useRef(0);
-  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  // --- Fetch simulation ---
-  const fetchSimulation = useCallback(async () => {
-    try {
-      const res = await fetch(
-        `/api/simulations/${encodeURIComponent(simulationId)}`,
-        { credentials: "include" },
-      );
-
-      if (res.status === 404 || res.status === 403) {
-        setNotFound(true);
-        return;
-      }
-
-      if (!res.ok) {
-        notify.error({
-          title: "Nie udało się pobrać symulacji",
-          description: "Spróbuj odświeżyć stronę.",
-        });
-        return;
-      }
-
-      const data = (await res.json()) as { simulation: SavedSimulationDTO };
-      const sim = data.simulation;
-
-      setOriginal(sim);
-      setName(sim.name);
-      const loadedInputs: SimulationInputs = {
-        currentAge: sim.currentAge,
-        expectedDeathAge: sim.expectedDeathAge,
-        workEndAge: sim.workEndAge,
-        statePensionAge: sim.statePensionAge,
-        estimatedPension: sim.estimatedPension,
-        monthlyNeed: sim.monthlyNeed,
-        stocksPct: sim.stocksPct,
-        monthlyInvestment: sim.userMonthlyInvestment ?? 0,
-      };
-      setDraftInputs(loadedInputs);
-      setLastRunInputs(loadedInputs);
-      setCalibratedMonthlyPayment(sim.recommendedMonthlyPayment);
-      setSimulationSuccessRate(sim.simulationSuccessRate);
-      setUserSimulationSuccessRate(sim.userSimulationSuccessRate);
-      setInitialRecommendedPercentiles(sim.recommendedChartPercentiles);
-      setInitialUserPercentiles(sim.userChartPercentiles);
-    } catch (err) {
-      console.error("fetch simulation error:", err);
-      notify.error({
-        title: "Nie udało się pobrać symulacji",
-        description: "Sprawdź połączenie internetowe.",
-      });
-    } finally {
-      setLoading(false);
-    }
-  }, [simulationId, notify]);
-
-  useEffect(() => {
-    fetchSimulation();
-  }, [fetchSimulation]);
-
-  // --- Recompute Monte Carlo simulation ---
   const totalSimulations = 10000;
   const totalTrialSimulations = 1000;
   const targetSuccessRate = 0.9;
@@ -187,8 +72,74 @@ export default function SimulationEditor({
   const visibleSimulationStep = Math.max(1, Math.ceil(totalSimulations / 100));
   const chunkCount = 200;
 
+  const initialInputs: SimulationInputs = useMemo(
+    () =>
+      initialSimulation
+        ? {
+            currentAge: initialSimulation.currentAge,
+            expectedDeathAge: initialSimulation.expectedDeathAge,
+            workEndAge: initialSimulation.workEndAge,
+            statePensionAge: initialSimulation.statePensionAge,
+            estimatedPension: initialSimulation.estimatedPension,
+            monthlyNeed: initialSimulation.monthlyNeed,
+            stocksPct: initialSimulation.stocksPct,
+            monthlyInvestment: initialSimulation.userMonthlyInvestment ?? 0,
+            currentPortfolioValue: initialSimulation.currentPortfolioValue ?? 0,
+          }
+        : {
+            currentAge: 0,
+            expectedDeathAge: 0,
+            workEndAge: 0,
+            statePensionAge: 0,
+            estimatedPension: 0,
+            monthlyNeed: 0,
+            stocksPct: 100,
+            monthlyInvestment: 0,
+            currentPortfolioValue: 0,
+          },
+    [initialSimulation],
+  );
+
+  const [name, setName] = useState(initialSimulation?.name ?? "");
+  const [draftInputs, setDraftInputs] =
+    useState<SimulationInputs>(initialInputs);
+  const [lastRunInputs, setLastRunInputs] = useState<SimulationInputs | null>(
+    initialInputs,
+  );
+
+  const [results, setResults] = useState<SimulationResult[]>([]);
+  const [userPaymentResults, setUserPaymentResults] = useState<
+    SimulationResult[]
+  >([]);
+  const [calibratedMonthlyPayment, setCalibratedMonthlyPayment] = useState<
+    number | null
+  >(initialSimulation?.recommendedMonthlyPayment ?? null);
+  const [simulationSuccessRate, setSimulationSuccessRate] = useState<
+    number | null
+  >(initialSimulation?.simulationSuccessRate ?? null);
+  const [userSimulationSuccessRate, setUserSimulationSuccessRate] = useState<
+    number | null
+  >(initialSimulation?.userSimulationSuccessRate ?? null);
+
+  const [hasRecomputed, setHasRecomputed] = useState(false);
+  const [isRecomputing, setIsRecomputing] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [chartRenderKey, setChartRenderKey] = useState(0);
+  const [saveModalOpen, setSaveModalOpen] = useState(false);
+  const [discardModalOpen, setDiscardModalOpen] = useState(false);
+
+  const runIdRef = useRef(0);
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const initialRecommendedPercentiles =
+    initialSimulation?.recommendedChartPercentiles ?? null;
+  const initialUserPercentiles =
+    initialSimulation?.userChartPercentiles ?? null;
+
   const runRecompute = useCallback(
     (inputs: SimulationInputs) => {
+      if (!initialSimulation) return;
+
       runIdRef.current += 1;
       const runId = runIdRef.current;
 
@@ -199,7 +150,7 @@ export default function SimulationEditor({
       setSimulationSuccessRate(null);
       setUserSimulationSuccessRate(null);
 
-      const knowsMonthlyAmount = original?.knowsMonthlyAmount ?? false;
+      const knowsMonthlyAmount = initialSimulation.knowsMonthlyAmount;
 
       timeoutRef.current = setTimeout(() => {
         if (runIdRef.current !== runId) return;
@@ -226,6 +177,7 @@ export default function SimulationEditor({
               stocksWeight,
               bondsWeight,
               payment,
+              inputs.currentPortfolioValue,
             );
             const finalValue = chart[chart.length - 1]?.value ?? 0;
             if (finalValue >= 0) successCount += 1;
@@ -235,7 +187,10 @@ export default function SimulationEditor({
 
         const findOptimalPayment = () => {
           let lower = 0;
-          let upper = Math.max(1, original?.recommendedMonthlyPayment ?? 1000);
+          let upper = Math.max(
+            1,
+            initialSimulation.recommendedMonthlyPayment ?? 1000,
+          );
           let upperRate = successRateForPayment(upper, totalTrialSimulations);
           let expandSteps = 0;
 
@@ -289,6 +244,7 @@ export default function SimulationEditor({
               stocksWeight,
               bondsWeight,
               optimalPayment,
+              inputs.currentPortfolioValue,
             );
             const finalValue = chart[chart.length - 1]?.value ?? 0;
             if (finalValue >= 0) successCount += 1;
@@ -305,6 +261,7 @@ export default function SimulationEditor({
                 stocksWeight,
                 bondsWeight,
                 validUserMonthlyPayment,
+                inputs.currentPortfolioValue,
               );
               const userFinalValue =
                 userChart[userChart.length - 1]?.value ?? 0;
@@ -341,7 +298,7 @@ export default function SimulationEditor({
         runChunk(0);
       }, 24);
     },
-    [original, chunkCount],
+    [initialSimulation, chunkCount],
   );
 
   useEffect(() => {
@@ -357,11 +314,11 @@ export default function SimulationEditor({
   );
 
   const isDirty = useMemo(() => {
-    if (!original) return false;
-    if (name.trim() !== original.name) return true;
+    if (!initialSimulation) return false;
+    if (name.trim() !== initialSimulation.name) return true;
     if (hasRecomputed) return true;
     return false;
-  }, [original, name, hasRecomputed]);
+  }, [initialSimulation, name, hasRecomputed]);
 
   useEffect(() => {
     if (!isDirty) return;
@@ -401,7 +358,7 @@ export default function SimulationEditor({
 
   const handleConfirmSave = async () => {
     if (
-      !original ||
+      !initialSimulation ||
       calibratedMonthlyPayment == null ||
       simulationSuccessRate == null
     ) {
@@ -415,7 +372,7 @@ export default function SimulationEditor({
     setIsSaving(true);
 
     try {
-      const knowsMonthlyAmount = original.knowsMonthlyAmount;
+      const knowsMonthlyAmount = initialSimulation.knowsMonthlyAmount;
 
       const recommendedPercentiles = hasRecomputed
         ? extractPercentiles(results)
@@ -437,6 +394,7 @@ export default function SimulationEditor({
         statePensionAge: inputsToSave.statePensionAge,
         estimatedPension: inputsToSave.estimatedPension,
         monthlyNeed: inputsToSave.monthlyNeed,
+        currentPortfolioValue: inputsToSave.currentPortfolioValue,
         stocksPct: inputsToSave.stocksPct,
         bondsPct: 100 - inputsToSave.stocksPct,
         knowsMonthlyAmount,
@@ -453,7 +411,7 @@ export default function SimulationEditor({
       };
 
       const res = await fetch(
-        `/api/simulations/${encodeURIComponent(simulationId)}`,
+        `/api/simulations/${encodeURIComponent(initialSimulation.id)}`,
         {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
@@ -491,21 +449,7 @@ export default function SimulationEditor({
     }
   };
 
-  if (loading) {
-    return (
-      <div className="w-full max-w-5xl mx-auto p-6">
-        <div className="h-8 w-40 rounded bg-black/5 animate-pulse mb-4" />
-        <div className="h-12 w-2/3 rounded bg-black/5 animate-pulse mb-2" />
-        <div className="h-4 w-1/3 rounded bg-black/5 animate-pulse mb-6" />
-        <div
-          className="h-125 rounded-2xl border border-(--btn-border) animate-pulse"
-          style={{ background: "var(--card-background)" }}
-        />
-      </div>
-    );
-  }
-
-  if (notFound || !original) {
+  if (!initialSimulation) {
     return (
       <div className="w-full max-w-5xl mx-auto p-6">
         <Button
@@ -541,7 +485,7 @@ export default function SimulationEditor({
     );
   }
 
-  const knowsMonthlyAmount = original.knowsMonthlyAmount;
+  const knowsMonthlyAmount = initialSimulation.knowsMonthlyAmount;
 
   const showUserContribution =
     knowsMonthlyAmount &&
@@ -617,7 +561,7 @@ export default function SimulationEditor({
     <>
       <SimulationComparisonChart
         key={`edit-user-chart-${chartRenderKey}`}
-        series={hasRecomputed ? results : EMPTY_SERIES}
+        series={hasRecomputed ? userPaymentResults : EMPTY_SERIES}
         displayEveryNthSimulation={visibleSimulationStep}
         precomputedPercentiles={
           hasRecomputed ? undefined : (initialUserPercentiles ?? undefined)
@@ -717,10 +661,10 @@ export default function SimulationEditor({
         </div>
       )}
 
-      {/* --- Wszystko w Card --- */}
+      {/* --- Card --- */}
       <Card className="w-full">
         <div className="flex flex-col gap-1">
-          {/* Wróć do listy + Zapisz zmiany — w tym samym rzędzie */}
+          {/* --- Header --- */}
           <div className="flex justify-between items-center mb-4 gap-4">
             <Button
               icon={<ArrowLeftOutlined />}

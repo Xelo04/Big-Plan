@@ -38,6 +38,7 @@ export type FormValues = {
   estimatedPension: number;
   monthlyNeed: number;
   monthlyInvestment?: number;
+  currentPortfolioValue?: number;
 };
 
 type PortfolioType = "aggressive" | "defensive" | "allStocks";
@@ -54,6 +55,7 @@ export default function Calculator() {
     statePensionAge: 0,
     estimatedPension: 0,
     monthlyNeed: 0,
+    currentPortfolioValue: 0,
   });
   const [portfolio, setPortfolio] = useState<PortfolioType | null>(null);
   const [startingMonthlyPayment, setStartingMonthlyPayment] =
@@ -326,134 +328,326 @@ export default function Calculator() {
 
         {/* --- KROK 1 --- */}
         {current === 1 && (
-          <Card
-            title="Podaj dane osobowe"
-            className="w-full max-w-4xl"
-            extra={
-              <Tooltip
-                title="Wszystkie kwoty podawaj według wartości bieżącej pieniądza - nie uwzględniaj inflacji."
-                styles={{ root: { maxWidth: 320, fontSize: 14 } }}
-                getPopupContainer={(trigger) =>
-                  trigger?.parentElement || document.body
-                }
-              >
-                <InfoCircleOutlined
-                  style={{ fontSize: 20 }}
-                  className="cursor-pointer"
-                />
-              </Tooltip>
-            }
-          >
+          <Card title="Podaj dane osobowe" className="w-full max-w-4xl">
+            {/* Info o wartości pieniądza */}
+            <div
+              className="mb-5 rounded-lg border p-3 flex items-start gap-2"
+              style={{
+                background: "rgba(59, 130, 246, 0.08)",
+                borderColor: "rgba(59, 130, 246, 0.3)",
+                color: "var(--text)",
+              }}
+            >
+              <InfoCircleOutlined
+                style={{ color: "#3b82f6", fontSize: 16, marginTop: 3 }}
+              />
+              <span className="text-sm leading-relaxed">
+                Wszystkie kwoty podawaj według{" "}
+                <strong>dzisiejszej wartości pieniądza</strong>. Symulacja
+                automatycznie uwzględni inflację w obliczeniach.
+              </span>
+            </div>
+
             <Form form={form} layout="vertical" initialValues={{}}>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <Form.Item
                   name="currentAge"
-                  label="Obecny wiek"
-                  rules={[{ required: true, message: "Podaj obecny wiek" }]}
+                  label={
+                    <span className="inline-flex items-center gap-1.5">
+                      Obecny wiek
+                      <Tooltip title="Twój aktualny wiek. To punkt startowy dla wszystkich obliczeń.">
+                        <InfoCircleOutlined className="text-(--muted) cursor-help" />
+                      </Tooltip>
+                    </span>
+                  }
+                  rules={[
+                    { required: true, message: "Podaj obecny wiek" },
+                    {
+                      type: "number",
+                      min: 18,
+                      max: 100,
+                      message: "Wiek musi być w przedziale 18–100 lat",
+                    },
+                  ]}
                 >
                   <InputNumber
-                    min={0}
+                    min={18}
+                    max={100}
                     style={{ width: "100%" }}
                     placeholder="np. 30"
                     onKeyDown={allowIntegerOnly}
                   />
                 </Form.Item>
+
                 <Form.Item
                   name="workEndAge"
-                  label="Wiek zakończenia pracy"
+                  label={
+                    <span className="inline-flex items-center gap-1.5">
+                      Wiek zakończenia pracy
+                      <Tooltip title="Wiek, w którym planujesz przestać pracować zawodowo i przejść na wypłacanie zgromadzonego kapitału.">
+                        <InfoCircleOutlined className="text-(--muted) cursor-help" />
+                      </Tooltip>
+                    </span>
+                  }
+                  dependencies={["currentAge"]}
                   rules={[
                     { required: true, message: "Podaj wiek zakończenia pracy" },
+                    {
+                      type: "number",
+                      min: 19,
+                      max: 110,
+                      message: "Wiek musi być w przedziale 19–110 lat",
+                    },
+                    ({ getFieldValue }) => ({
+                      validator(_, value) {
+                        const currentAge = getFieldValue("currentAge");
+                        if (
+                          value == null ||
+                          currentAge == null ||
+                          value > currentAge
+                        ) {
+                          return Promise.resolve();
+                        }
+                        return Promise.reject(
+                          new Error(
+                            "Wiek zakończenia pracy musi być większy niż obecny wiek",
+                          ),
+                        );
+                      },
+                    }),
                   ]}
                 >
                   <InputNumber
-                    min={0}
+                    min={19}
+                    max={110}
                     style={{ width: "100%" }}
                     placeholder="np. 60"
                     onKeyDown={allowIntegerOnly}
                   />
                 </Form.Item>
+
                 <Form.Item
                   name="statePensionAge"
-                  label="Wiek przejścia na emeryturę państwową"
+                  label={
+                    <span className="inline-flex items-center gap-1.5">
+                      Wiek przejścia na emeryturę państwową
+                      <Tooltip title="Ustawowy wiek emerytalny (obecnie 60 dla kobiet, 65 dla mężczyzn). Od tego momentu doliczamy Twoją państwową emeryturę.">
+                        <InfoCircleOutlined className="text-(--muted) cursor-help" />
+                      </Tooltip>
+                    </span>
+                  }
+                  dependencies={["workEndAge"]}
                   rules={[
                     {
                       required: true,
                       message: "Podaj wiek przejścia na emeryturę państwową",
                     },
+                    {
+                      type: "number",
+                      min: 19,
+                      max: 110,
+                      message: "Wiek musi być w przedziale 19–110 lat",
+                    },
+                    ({ getFieldValue }) => ({
+                      validator(_, value) {
+                        const workEndAge = getFieldValue("workEndAge");
+                        if (
+                          value == null ||
+                          workEndAge == null ||
+                          value >= workEndAge
+                        ) {
+                          return Promise.resolve();
+                        }
+                        return Promise.reject(
+                          new Error(
+                            "Wiek emerytury państwowej nie może być wcześniejszy niż koniec pracy",
+                          ),
+                        );
+                      },
+                    }),
                   ]}
                 >
                   <InputNumber
-                    min={0}
+                    min={19}
+                    max={110}
                     style={{ width: "100%" }}
                     placeholder="np. 65"
                     onKeyDown={allowIntegerOnly}
                   />
                 </Form.Item>
+
                 <Form.Item
                   name="expectedDeathAge"
-                  label="Przewidywany wiek śmierci"
+                  label={
+                    <span className="inline-flex items-center gap-1.5">
+                      Przewidywany wiek śmierci
+                      <Tooltip title="Do jakiego wieku planujesz zabezpieczyć środki. GUS podaje średnią ok. 78 lat (mężczyźni) i 83 lat (kobiety) - warto założyć z zapasem.">
+                        <InfoCircleOutlined className="text-(--muted) cursor-help" />
+                      </Tooltip>
+                    </span>
+                  }
+                  dependencies={["statePensionAge"]}
                   rules={[
                     {
                       required: true,
                       message: "Podaj przewidywany wiek śmierci",
                     },
+                    {
+                      type: "number",
+                      min: 20,
+                      max: 110,
+                      message: "Wiek musi być w przedziale 20–110 lat",
+                    },
+                    ({ getFieldValue }) => ({
+                      validator(_, value) {
+                        const statePensionAge =
+                          getFieldValue("statePensionAge");
+                        if (
+                          value == null ||
+                          statePensionAge == null ||
+                          value > statePensionAge
+                        ) {
+                          return Promise.resolve();
+                        }
+                        return Promise.reject(
+                          new Error(
+                            "Wiek śmierci musi być większy niż wiek emerytury państwowej",
+                          ),
+                        );
+                      },
+                    }),
                   ]}
                 >
                   <InputNumber
-                    min={0}
+                    min={20}
+                    max={110}
                     style={{ width: "100%" }}
                     placeholder="np. 85"
                     onKeyDown={allowIntegerOnly}
                   />
                 </Form.Item>
+
                 <Form.Item
                   name="estimatedPension"
-                  label="Szacowana emerytura państwowa (miesięcznie)"
+                  label={
+                    <span className="inline-flex items-center gap-1.5">
+                      Szacowana emerytura państwowa (miesięcznie)
+                      <Tooltip title="Kwota, jaką spodziewasz się otrzymywać z ZUS/KRUS po przejściu na emeryturę państwową.">
+                        <InfoCircleOutlined className="text-(--muted) cursor-help" />
+                      </Tooltip>
+                    </span>
+                  }
                   rules={[
                     {
                       required: true,
                       message: "Podaj szacowaną emeryturę państwową",
+                    },
+                    {
+                      type: "number",
+                      min: 0,
+                      max: 1000000,
+                      message: "Maksymalna kwota to 1 000 000 zł",
                     },
                   ]}
                 >
                   <InputNumber
                     style={{ width: "100%" }}
                     min={0}
+                    max={1000000}
                     placeholder="np. 3000"
                     onKeyDown={allowDecimal}
                   />
                 </Form.Item>
+
                 <Form.Item
                   name="monthlyNeed"
-                  label="Kwota potrzebna na przeżycie na emeryturze (miesięcznie)"
+                  label={
+                    <span className="inline-flex items-center gap-1.5">
+                      Kwota potrzebna na przeżycie (miesięcznie)
+                      <Tooltip title="Ile miesięcznie chcesz mieć na wygodne życie po zakończeniu pracy. Uwzględnij mieszkanie, jedzenie, rozrywkę, opiekę zdrowotną.">
+                        <InfoCircleOutlined className="text-(--muted) cursor-help" />
+                      </Tooltip>
+                    </span>
+                  }
                   rules={[
                     {
                       required: true,
                       message:
                         "Podaj kwotę potrzebną miesięcznie na emeryturze",
                     },
+                    {
+                      type: "number",
+                      min: 0,
+                      max: 1000000,
+                      message: "Maksymalna kwota to 1 000 000 zł",
+                    },
                   ]}
                 >
                   <InputNumber
                     min={0}
+                    max={1000000}
                     style={{ width: "100%" }}
                     placeholder="np. 4000"
                     onKeyDown={allowDecimal}
                   />
                 </Form.Item>
+
+                <Form.Item
+                  name="currentPortfolioValue"
+                  label={
+                    <span className="inline-flex items-center gap-1.5">
+                      Obecna wartość płynnych inwestycji
+                      <Tooltip title="Ile masz dziś w lokatach, funduszach, ETF-ach, akcjach itp. To punkt startowy portfela - nie wliczaj nieruchomości ani długoterminowych zobowiązań.">
+                        <InfoCircleOutlined className="text-(--muted) cursor-help" />
+                      </Tooltip>
+                    </span>
+                  }
+                  rules={[
+                    {
+                      type: "number",
+                      min: 0,
+                      max: 100000000,
+                      message: "Maksymalna kwota to 100 000 000 zł",
+                    },
+                  ]}
+                  initialValue={0}
+                >
+                  <InputNumber
+                    min={0}
+                    max={100000000}
+                    style={{ width: "100%" }}
+                    placeholder="np. 50000"
+                    onKeyDown={allowDecimal}
+                  />
+                </Form.Item>
+
                 {knowsMonthlyAmount && (
                   <Form.Item
                     name="monthlyInvestment"
-                    label="Miesięczna kwota inwestycji (PLN)"
+                    label={
+                      <span className="inline-flex items-center gap-1.5">
+                        Miesięczna kwota inwestycji (PLN)
+                        <Tooltip title="Ile miesięcznie planujesz odkładać. Symulacja sprawdzi, czy ta kwota wystarczy do osiągnięcia Twojego celu.">
+                          <InfoCircleOutlined className="text-(--muted) cursor-help" />
+                        </Tooltip>
+                      </span>
+                    }
                     rules={[
                       {
                         required: true,
                         message: "Podaj miesięczną kwotę inwestycji",
                       },
+                      {
+                        type: "number",
+                        min: 0,
+                        max: 1000000,
+                        message: "Maksymalna kwota to 1 000 000 zł",
+                      },
                     ]}
                   >
                     <InputNumber
                       min={0}
+                      max={1000000}
                       style={{ width: "100%" }}
                       placeholder="np. 1000"
                       onKeyDown={allowDecimal}
@@ -478,6 +672,9 @@ export default function Calculator() {
                         monthlyInvestment: values.monthlyInvestment
                           ? Number(values.monthlyInvestment)
                           : undefined,
+                        currentPortfolioValue: Number(
+                          values.currentPortfolioValue ?? 0,
+                        ),
                       });
                       next();
                     });
@@ -497,7 +694,7 @@ export default function Calculator() {
             className="w-full max-w-5xl"
             extra={
               <Tooltip
-                title="Przedstawione poniżej wykresy są poglądowe i mają charakter informatyczny"
+                title="Przedstawione poniżej wykresy są poglądowe i mają charakter informacyjny."
                 styles={{ root: { maxWidth: 320, fontSize: 14 } }}
                 getPopupContainer={(trigger) =>
                   trigger?.parentElement || document.body
@@ -511,39 +708,6 @@ export default function Calculator() {
             }
           >
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-              <Card
-                hoverable
-                className={`w-full cursor-pointer border border-(--btn-border) ${portfolio === "aggressive" ? "border-2 border-(--accent)" : ""}`}
-                styles={{ body: { padding: 24 } }}
-                onClick={() => {
-                  setPortfolio("aggressive");
-                  setStartingMonthlyPayment(
-                    Number(portfolioMonthlyPaymentData.aggressive),
-                  );
-                  next();
-                }}
-              >
-                <div className="flex flex-col gap-2">
-                  <h4 className="font-semibold">Agresywny</h4>
-                  <p className="text-sm text-(--muted)">
-                    60% akcje · 40% obligacje
-                  </p>
-                  <PortfolioMiniChart
-                    data={portfolioChartData.aggressive}
-                    stroke="#f97316"
-                    yMax={portfolioPreviewMaxY}
-                  />
-                  <div className="mt-2 pt-2 border-t border-(--btn-border)">
-                    <p className="text-xs text-(--muted)">
-                      Szacowana miesięczna składka
-                    </p>
-                    <p className="text-base font-semibold text-(--accent)">
-                      {portfolioMonthlyPaymentData.aggressive} zł
-                    </p>
-                  </div>
-                </div>
-              </Card>
-
               <Card
                 hoverable
                 className={`w-full cursor-pointer border border-(--btn-border) ${portfolio === "defensive" ? "border-2 border-(--accent)" : ""}`}
@@ -572,6 +736,39 @@ export default function Calculator() {
                     </p>
                     <p className="text-base font-semibold text-(--accent)">
                       {portfolioMonthlyPaymentData.defensive} zł
+                    </p>
+                  </div>
+                </div>
+              </Card>
+
+              <Card
+                hoverable
+                className={`w-full cursor-pointer border border-(--btn-border) ${portfolio === "aggressive" ? "border-2 border-(--accent)" : ""}`}
+                styles={{ body: { padding: 24 } }}
+                onClick={() => {
+                  setPortfolio("aggressive");
+                  setStartingMonthlyPayment(
+                    Number(portfolioMonthlyPaymentData.aggressive),
+                  );
+                  next();
+                }}
+              >
+                <div className="flex flex-col gap-2">
+                  <h4 className="font-semibold">Agresywny</h4>
+                  <p className="text-sm text-(--muted)">
+                    60% akcje · 40% obligacje
+                  </p>
+                  <PortfolioMiniChart
+                    data={portfolioChartData.aggressive}
+                    stroke="#f97316"
+                    yMax={portfolioPreviewMaxY}
+                  />
+                  <div className="mt-2 pt-2 border-t border-(--btn-border)">
+                    <p className="text-xs text-(--muted)">
+                      Szacowana miesięczna składka
+                    </p>
+                    <p className="text-base font-semibold text-(--accent)">
+                      {portfolioMonthlyPaymentData.aggressive} zł
                     </p>
                   </div>
                 </div>

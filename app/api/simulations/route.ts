@@ -23,6 +23,7 @@ const createSimulationSchema = z.object({
   statePensionAge: z.number().int().min(1),
   estimatedPension: z.number().min(0),
   monthlyNeed: z.number().min(0),
+  currentPortfolioValue: z.number().min(0).optional().default(0),
   stocksPct: z.number().int().min(0).max(100),
   bondsPct: z.number().int().min(0).max(100),
   knowsMonthlyAmount: z.boolean(),
@@ -50,7 +51,7 @@ export async function GET() {
       .from("saved_simulation")
       .select(
         `id, name, currentAge, expectedDeathAge, workEndAge, statePensionAge,
-         estimatedPension, monthlyNeed, stocksPct, bondsPct, knowsMonthlyAmount,
+         estimatedPension, monthlyNeed, currentPortfolioValue, stocksPct, bondsPct, knowsMonthlyAmount,
          userMonthlyInvestment, recommendedMonthlyPayment, simulationSuccessRate,
          userSimulationSuccessRate, recommendedChartPercentiles, userChartPercentiles,
          totalSimulations, createdAt, updatedAt`,
@@ -129,6 +130,7 @@ export async function POST(req: Request) {
         statePensionAge: data.statePensionAge,
         estimatedPension: data.estimatedPension,
         monthlyNeed: data.monthlyNeed,
+        currentPortfolioValue: data.currentPortfolioValue ?? 0,
         stocksPct: data.stocksPct,
         bondsPct: data.bondsPct,
         knowsMonthlyAmount: data.knowsMonthlyAmount,

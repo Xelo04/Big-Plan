@@ -21,25 +21,31 @@ import type {
   PortfolioDTO,
 } from "@/src/lib/portfolio/portfolio-types";
 
+type SimulationInfo = {
+  name: string;
+  stocksPct: number;
+  bondsPct: number;
+};
+
 type PortfolioDetailsProps = {
   simulationId: string;
+  initialPortfolio: PortfolioDTO | null;
+  simulationInfo: SimulationInfo | null;
 };
 
 export default function PortfolioDetails({
   simulationId,
+  initialPortfolio,
+  simulationInfo,
 }: PortfolioDetailsProps) {
   const router = useRouter();
   const notify = useNotify();
   const [modal, modalContextHolder] = Modal.useModal();
   const { rates: fxRates } = useFxRates();
 
-  const [portfolio, setPortfolio] = useState<PortfolioDTO | null>(null);
-  const [simulationInfo, setSimulationInfo] = useState<{
-    name: string;
-    stocksPct: number;
-    bondsPct: number;
-  } | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [portfolio, setPortfolio] = useState<PortfolioDTO | null>(
+    initialPortfolio,
+  );
   const [formOpen, setFormOpen] = useState(false);
   const [editingAsset, setEditingAsset] = useState<PortfolioAssetDTO | null>(
     null,
@@ -47,56 +53,46 @@ export default function PortfolioDetails({
   const [saving, setSaving] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
-  const fetchPortfolio = useCallback(async () => {
+  const refreshPortfolio = useCallback(async () => {
     try {
       const res = await fetch(
         `/api/portfolios/${encodeURIComponent(simulationId)}`,
         { credentials: "include" },
       );
-      if (!res.ok) throw new Error("Błąd");
-      const data = await res.json();
+      if (!res.ok) return;
+      const data = (await res.json()) as { portfolio: PortfolioDTO | null };
       setPortfolio(data.portfolio);
-      setSimulationInfo(data.simulation);
-    } catch {
-      notify.error({
-        title: "Błąd",
-        description: "Nie udało się pobrać danych portfela.",
-      });
-    } finally {
-      setLoading(false);
+    } catch (err) {
+      console.error("refresh portfolio error:", err);
     }
-  }, [simulationId, notify]);
+  }, [simulationId]);
 
+  // Cichy sync z Yahoo Finance po wejściu w portfel
   useEffect(() => {
-    fetchPortfolio().then(async () => {
+    if (!simulationInfo) return;
+
+    const syncPrices = async () => {
       try {
         const res = await fetch(
           `/api/portfolios/${encodeURIComponent(simulationId)}/sync`,
-          {
-            method: "POST",
-            credentials: "include",
-          },
+          { method: "POST", credentials: "include" },
         );
-        if (res.ok) {
-          const data = await res.json();
-          if (
-            data.ok &&
-            data.message !== "Brak aktywów z tickerem" &&
-            data.message !== "Pusty portfel"
-          ) {
-            const refreshRes = await fetch(
-              `/api/portfolios/${encodeURIComponent(simulationId)}`,
-              { credentials: "include" },
-            );
-            const refreshData = await refreshRes.json();
-            setPortfolio(refreshData.portfolio);
-          }
+        if (!res.ok) return;
+        const data = (await res.json()) as { ok?: boolean; message?: string };
+        if (
+          data.ok &&
+          data.message !== "Brak aktywów z tickerem" &&
+          data.message !== "Pusty portfel"
+        ) {
+          await refreshPortfolio();
         }
       } catch (err) {
         console.error("Background sync failed", err);
       }
-    });
-  }, [fetchPortfolio, simulationId]);
+    };
+
+    syncPrices();
+  }, [simulationId, simulationInfo, refreshPortfolio]);
 
   const handleFormSubmit = async (payload: CreateAssetPayload) => {
     setSaving(true);
@@ -121,7 +117,7 @@ export default function PortfolioDetails({
       });
       setFormOpen(false);
       setEditingAsset(null);
-      await fetchPortfolio();
+      await refreshPortfolio();
     } catch {
       notify.error({ title: "Błąd zapisu", description: "Wystąpił błąd." });
     } finally {
@@ -152,7 +148,7 @@ export default function PortfolioDetails({
             title: "Usunięto",
             description: `Aktywo ${asset.name} usunięte.`,
           });
-          await fetchPortfolio();
+          await refreshPortfolio();
         } catch {
           notify.error({ title: "Błąd", description: "Nie udało się usunąć." });
         } finally {
@@ -162,17 +158,41 @@ export default function PortfolioDetails({
     });
   };
 
-  if (loading) {
+  if (!simulationInfo) {
     return (
       <div className="w-full max-w-5xl mx-auto p-6">
-        <div className="h-8 w-40 rounded bg-black/5 animate-pulse mb-6" />
-        <div className="h-100 w-full rounded-2xl bg-black/5 animate-pulse" />
+        <Button
+          icon={<ArrowLeftOutlined />}
+          onClick={() => router.push("/my-portfolios")}
+          className="mb-6"
+        >
+          Wróć do listy portfeli
+        </Button>
+        <div
+          className="rounded-2xl border border-(--btn-border) p-10 flex flex-col items-center text-center"
+          style={{
+            background: "var(--card-background)",
+            boxShadow: "var(--card-shadow)",
+            backdropFilter: "var(--card-backdrop-filter)",
+          }}
+        >
+          <h2 className="text-xl font-semibold text-(--text) mb-2">
+            Portfel nie istnieje
+          </h2>
+          <p className="text-sm text-(--muted) mb-6 max-w-md">
+            Ta symulacja została usunięta lub nie masz do niej dostępu.
+          </p>
+          <Button
+            type="primary"
+            size="large"
+            onClick={() => router.push("/my-portfolios")}
+          >
+            Wróć do listy portfeli
+          </Button>
+        </div>
       </div>
     );
   }
-
-  if (!simulationInfo)
-    return <div className="p-6">Nie znaleziono portfela.</div>;
 
   const assets = portfolio?.assets ?? [];
   const isEmpty = assets.length === 0;
@@ -181,7 +201,7 @@ export default function PortfolioDetails({
     <div className="w-full max-w-5xl mx-auto p-6">
       {modalContextHolder}
 
-      {/* --- Top bar (Wróć do listy) - poza kartą, jak w edycji --- */}
+      {/* --- Top bar --- */}
       <div className="mb-6">
         <Button
           icon={<ArrowLeftOutlined />}
@@ -192,7 +212,7 @@ export default function PortfolioDetails({
         </Button>
       </div>
 
-      {/* --- Główny kontener na wzór SimulationEditor --- */}
+      {/* --- Główny kontener --- */}
       <Card className="w-full">
         <div className="flex flex-col gap-6">
           <div className="flex flex-col sm:flex-row justify-between sm:items-start gap-4 pb-2 border-b border-(--btn-border)">

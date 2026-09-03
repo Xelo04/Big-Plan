@@ -16,6 +16,7 @@ export type SaveSimulationPayload = {
   statePensionAge: number;
   estimatedPension: number;
   monthlyNeed: number;
+  currentPortfolioValue: number;
 
   stocksPct: number;
   bondsPct: number;
@@ -42,6 +43,7 @@ export type SavedSimulationDTO = {
   statePensionAge: number;
   estimatedPension: number;
   monthlyNeed: number;
+  currentPortfolioValue: number;
   stocksPct: number;
   bondsPct: number;
   knowsMonthlyAmount: boolean;

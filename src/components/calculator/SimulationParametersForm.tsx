@@ -1,4 +1,5 @@
 import { InputNumber, Slider } from "antd";
+import { PieChart, Pie, Cell, ResponsiveContainer } from "recharts";
 
 type SimulationFormInputs = {
   currentAge: number;
@@ -7,6 +8,7 @@ type SimulationFormInputs = {
   statePensionAge: number;
   estimatedPension: number;
   monthlyNeed: number;
+  currentPortfolioValue: number;
   stocksPct: number;
   monthlyInvestment: number;
 };
@@ -17,6 +19,9 @@ type SimulationParametersFormProps = {
   showMonthlyInvestmentField?: boolean;
   onInputsChange: (nextInputs: SimulationFormInputs) => void;
 };
+
+const STOCKS_COLOR = "#f97316";
+const BONDS_COLOR = "#0ea5a4";
 
 export default function SimulationParametersForm({
   inputs,
@@ -30,6 +35,11 @@ export default function SimulationParametersForm({
     onInputsChange({ ...inputs, ...patch });
   };
 
+  const pieData = [
+    { name: "Akcje", value: inputs.stocksPct, color: STOCKS_COLOR },
+    { name: "Obligacje", value: bondsPct, color: BONDS_COLOR },
+  ];
+
   return (
     <div className="mt-6 rounded-lg border border-(--btn-border) p-4">
       <p className="text-sm font-semibold mb-3">Parametry symulacji</p>
@@ -38,7 +48,8 @@ export default function SimulationParametersForm({
         <div>
           <p className="text-xs text-(--muted) mb-1">Obecny wiek</p>
           <InputNumber
-            min={0}
+            min={18}
+            max={110}
             style={{ width: "100%" }}
             value={inputs.currentAge}
             onChange={(value) =>
@@ -51,7 +62,8 @@ export default function SimulationParametersForm({
             Przewidywany wiek śmierci
           </p>
           <InputNumber
-            min={0}
+            min={18}
+            max={110}
             style={{ width: "100%" }}
             value={inputs.expectedDeathAge}
             onChange={(value) =>
@@ -62,7 +74,8 @@ export default function SimulationParametersForm({
         <div>
           <p className="text-xs text-(--muted) mb-1">Wiek zakończenia pracy</p>
           <InputNumber
-            min={0}
+            min={18}
+            max={110}
             style={{ width: "100%" }}
             value={inputs.workEndAge}
             onChange={(value) =>
@@ -75,7 +88,8 @@ export default function SimulationParametersForm({
             Wiek przejścia na emeryturę państwową
           </p>
           <InputNumber
-            min={0}
+            min={18}
+            max={110}
             style={{ width: "100%" }}
             value={inputs.statePensionAge}
             onChange={(value) =>
@@ -107,6 +121,20 @@ export default function SimulationParametersForm({
             }
           />
         </div>
+        <div>
+          <p className="text-xs text-(--muted) mb-1">
+            Obecna wartość płynnych inwestycji
+          </p>
+          <InputNumber
+            min={0}
+            max={100000000}
+            style={{ width: "100%" }}
+            value={inputs.currentPortfolioValue}
+            onChange={(value) =>
+              updateInputs({ currentPortfolioValue: Number(value ?? 0) })
+            }
+          />
+        </div>
         {showMonthlyInvestmentField && (
           <div>
             <p className="text-xs text-(--muted) mb-1">
@@ -124,28 +152,90 @@ export default function SimulationParametersForm({
         )}
       </div>
 
-      <p className="text-sm font-semibold mb-2">Sklad portfela</p>
-      <div className="flex items-center justify-between text-sm mb-3">
-        <span>Akcje: {inputs.stocksPct}%</span>
-        <span>Obligacje: {bondsPct}%</span>
-      </div>
-      <Slider
-        min={0}
-        max={100}
-        step={1}
-        value={inputs.stocksPct}
-        onChange={(value) => {
-          if (typeof value === "number") {
-            updateInputs({ stocksPct: value });
-          }
-        }}
-      />
+      {/* --- Skład portfela --- */}
+      <div className="mt-6 pt-4 border-t border-(--btn-border)">
+        <p className="text-sm font-semibold mb-4">Skład portfela</p>
 
-      <p className="text-xs mt-3 text-(--muted)">
-        {hasPendingChanges
-          ? "Masz nowe ustawienia. Kliknij przycisk, aby uruchomic symulacje na nowych danych."
-          : "Wykres pokazuje wynik dla aktualnych ustawien."}
-      </p>
+        <div className="grid grid-cols-1 md:grid-cols-[1fr_180px] gap-6 items-center">
+          {/* Lewa strona: legendy i slider */}
+          <div>
+            <div className="flex items-center justify-between text-sm mb-3">
+              <div className="inline-flex items-center gap-2">
+                <span
+                  className="inline-block w-3 h-3 rounded-sm"
+                  style={{ background: STOCKS_COLOR }}
+                />
+                <span className="font-medium text-(--text)">
+                  Akcje: {inputs.stocksPct}%
+                </span>
+              </div>
+              <div className="inline-flex items-center gap-2">
+                <span
+                  className="inline-block w-3 h-3 rounded-sm"
+                  style={{ background: BONDS_COLOR }}
+                />
+                <span className="font-medium text-(--text)">
+                  Obligacje: {bondsPct}%
+                </span>
+              </div>
+            </div>
+
+            <Slider
+              min={0}
+              max={100}
+              step={1}
+              value={inputs.stocksPct}
+              tooltip={{ formatter: (val) => `${val}% Akcji` }}
+              onChange={(value) => {
+                if (typeof value === "number") {
+                  updateInputs({ stocksPct: value });
+                }
+              }}
+              styles={{
+                track: {
+                  background: STOCKS_COLOR,
+                  height: 8,
+                },
+                rail: {
+                  background: BONDS_COLOR,
+                  height: 8,
+                  opacity: 0.7,
+                },
+              }}
+            />
+
+            <p className="text-xs mt-4 text-(--muted)">
+              {hasPendingChanges
+                ? "Masz nowe ustawienia. Kliknij przycisk, aby uruchomić symulację na nowych danych."
+                : "Wykres pokazuje wynik dla aktualnych ustawień."}
+            </p>
+          </div>
+
+          {/* Prawa strona: wykres kołowy */}
+          <div className="w-full h-40 flex items-center justify-center">
+            <ResponsiveContainer width="100%" height="100%">
+              <PieChart>
+                <Pie
+                  data={pieData}
+                  cx="50%"
+                  cy="50%"
+                  innerRadius={40}
+                  outerRadius={70}
+                  paddingAngle={
+                    inputs.stocksPct > 0 && inputs.stocksPct < 100 ? 2 : 0
+                  }
+                  dataKey="value"
+                  isAnimationActive={false}
+                >
+                  {pieData.map((entry, idx) => (
+                    <Cell key={idx} fill={entry.color} />
+                  ))}
+                </Pie>
+              </PieChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

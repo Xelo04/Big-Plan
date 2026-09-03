@@ -1,6 +1,5 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
 import { Button, Tabs, Tooltip } from "antd";
 import {
   ArrowLeftOutlined,
@@ -10,12 +9,11 @@ import {
   UserOutlined,
 } from "@ant-design/icons";
 import { useRouter } from "next/navigation";
-import { useNotify } from "../notifications/NotificationProvider";
 import SimulationComparisonChart from "../calculator/SimulationComparisonChart";
 import type { SavedSimulationDTO } from "@/src/lib/simulation/simulation-types";
 
 type SimulationDetailsProps = {
-  simulationId: string;
+  simulation: SavedSimulationDTO | null;
 };
 
 const formatAmount = (value: number) =>
@@ -33,69 +31,11 @@ const formatDate = (iso: string) => {
 };
 
 export default function SimulationDetails({
-  simulationId,
+  simulation,
 }: SimulationDetailsProps) {
   const router = useRouter();
-  const notify = useNotify();
 
-  const [simulation, setSimulation] = useState<SavedSimulationDTO | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [notFound, setNotFound] = useState(false);
-
-  const fetchSimulation = useCallback(async () => {
-    try {
-      const res = await fetch(
-        `/api/simulations/${encodeURIComponent(simulationId)}`,
-        {
-          credentials: "include",
-        },
-      );
-
-      if (res.status === 404 || res.status === 403) {
-        setNotFound(true);
-        return;
-      }
-
-      if (!res.ok) {
-        notify.error({
-          title: "Nie udało się pobrać symulacji",
-          description: "Spróbuj odświeżyć stronę.",
-        });
-        return;
-      }
-
-      const data = (await res.json()) as { simulation: SavedSimulationDTO };
-      setSimulation(data.simulation);
-    } catch (err) {
-      console.error("fetch simulation error:", err);
-      notify.error({
-        title: "Nie udało się pobrać symulacji",
-        description: "Sprawdź połączenie internetowe.",
-      });
-    } finally {
-      setLoading(false);
-    }
-  }, [simulationId, notify]);
-
-  useEffect(() => {
-    fetchSimulation();
-  }, [fetchSimulation]);
-
-  if (loading) {
-    return (
-      <div className="w-full max-w-5xl mx-auto p-6">
-        <div className="h-8 w-40 rounded bg-black/5 animate-pulse mb-4" />
-        <div className="h-12 w-2/3 rounded bg-black/5 animate-pulse mb-2" />
-        <div className="h-4 w-1/3 rounded bg-black/5 animate-pulse mb-6" />
-        <div
-          className="h-125 rounded-2xl border border-(--btn-border) animate-pulse"
-          style={{ background: "var(--card-background)" }}
-        />
-      </div>
-    );
-  }
-
-  if (notFound || !simulation) {
+  if (!simulation) {
     return (
       <div className="w-full max-w-5xl mx-auto p-6">
         <Button
@@ -138,6 +78,7 @@ export default function SimulationDetails({
   }
 
   const {
+    id,
     name,
     currentAge,
     expectedDeathAge,
@@ -145,6 +86,7 @@ export default function SimulationDetails({
     statePensionAge,
     estimatedPension,
     monthlyNeed,
+    currentPortfolioValue,
     stocksPct,
     bondsPct,
     knowsMonthlyAmount,
@@ -314,6 +256,12 @@ export default function SimulationDetails({
             {stocksPct}% akcje · {bondsPct}% obligacje
           </span>
         </div>
+        <div className="flex items-center justify-between">
+          <span className="text-(--muted)">Obecny kapitał początkowy</span>
+          <span className="font-medium text-(--text)">
+            {formatAmount(currentPortfolioValue ?? 0)} zł
+          </span>
+        </div>
         {knowsMonthlyAmount && userMonthlyInvestment != null && (
           <div className="flex items-center justify-between">
             <span className="text-(--muted)">Twoja składka miesięczna</span>
@@ -355,7 +303,7 @@ export default function SimulationDetails({
           <Button
             size="large"
             onClick={() =>
-              router.push(`/my-portfolios/${encodeURIComponent(simulationId)}`)
+              router.push(`/my-portfolios/${encodeURIComponent(id)}`)
             }
           >
             Przejdź do portfela
@@ -364,9 +312,7 @@ export default function SimulationDetails({
             icon={<EditOutlined />}
             size="large"
             onClick={() =>
-              router.push(
-                `/my-simulations/edit/${encodeURIComponent(simulation.id)}`,
-              )
+              router.push(`/my-simulations/edit/${encodeURIComponent(id)}`)
             }
           >
             Edytuj

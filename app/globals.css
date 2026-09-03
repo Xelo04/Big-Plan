@@ -373,3 +373,20 @@ html.dark body {
   border-color: var(--btn-border) !important;
   color: var(--icon-muted) !important;
 }
+
+/* Animacja monety na stronie głównej */
+@keyframes shimmer {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+.animate-shimmer {
+  animation: shimmer 3s ease-in-out infinite;
+}

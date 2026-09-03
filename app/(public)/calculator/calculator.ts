@@ -40,7 +40,7 @@ export function celInwestycyjny(
   );
 }
 
-// Składka miesięczna
+// Składka miesięczna z uwzględnieniem obecnego kapitału początkowego
 export function skladkaMiesieczna(
   kwota_potrzebna_na_emeryturze_miesiecznie: number,
   szacowana_emerytura_miesiecznie: number,
@@ -49,21 +49,39 @@ export function skladkaMiesieczna(
   wiek_przejscia_na_emeryture: number,
   wiek_smierci: number,
   zwrot_miesieczny_portfela: number,
+  kapital_poczatkowy: number = 0,
 ) {
   const czas_inwestowania = (wiek_zakonczenia_pracy - wiek_obecny) * 12;
+
+  if (czas_inwestowania <= 0) return 0;
+
   const czas_luki_emerytalnej =
     (wiek_przejscia_na_emeryture - wiek_zakonczenia_pracy) * 12;
   const czas_emerytury = (wiek_smierci - wiek_przejscia_na_emeryture) * 12;
-  const skladka_miesieczna =
-    ((kwota_potrzebna_na_emeryturze_miesiecznie -
+
+  const cel_z_luki_i_emerytury =
+    (kwota_potrzebna_na_emeryturze_miesiecznie -
       szacowana_emerytura_miesiecznie) *
       (1 -
         (1 + zwrot_miesieczny_portfela) **
           (-czas_luki_emerytalnej - czas_emerytury)) +
-      szacowana_emerytura_miesiecznie *
-        (1 - (1 + zwrot_miesieczny_portfela) ** -czas_luki_emerytalnej)) /
-    ((1 + zwrot_miesieczny_portfela) ** czas_inwestowania - 1);
-  return skladka_miesieczna;
+    szacowana_emerytura_miesiecznie *
+      (1 - (1 + zwrot_miesieczny_portfela) ** -czas_luki_emerytalnej);
+
+  // Kapitał początkowy rośnie przez cały okres inwestowania
+  const fv_kapitalu =
+    Math.max(0, kapital_poczatkowy) *
+    (1 + zwrot_miesieczny_portfela) ** czas_inwestowania;
+
+  const cel_do_uzbierania = cel_z_luki_i_emerytury - fv_kapitalu;
+
+  const mianownik = (1 + zwrot_miesieczny_portfela) ** czas_inwestowania - 1;
+
+  if (mianownik <= 0) return 0;
+
+  const skladka_miesieczna = cel_do_uzbierania / mianownik;
+
+  return Math.max(0, skladka_miesieczna);
 }
 
 // Losuje losowy wiersz z pliku calculatorData.json i zwraca go jako obiekt CalculatorDataRow
@@ -102,6 +120,7 @@ type ChartPoint = {
   value: number;
 };
 
+// Zwraca wartości portfela co miesiąc przy wyborze portfela
 export function wartosciPortfelaWyborPortfolio(
   kwota_potrzebna_na_emeryturze_miesiecznie: number,
   szacowana_emerytura_miesiecznie: number,
@@ -112,8 +131,8 @@ export function wartosciPortfelaWyborPortfolio(
   zwrot_miesieczny_portfela: number,
   stala_inflacja_miesieczna: number,
   mini = false,
+  kapital_poczatkowy: number = 0,
 ): ChartPoint[] {
-  // Obliczenie składki miesięcznej
   const skladka_miesieczna = skladkaMiesieczna(
     kwota_potrzebna_na_emeryturze_miesiecznie,
     szacowana_emerytura_miesiecznie,
@@ -125,13 +144,14 @@ export function wartosciPortfelaWyborPortfolio(
       zwrot_miesieczny_portfela,
       stala_inflacja_miesieczna,
     ),
+    kapital_poczatkowy,
   );
 
-  const roczneWartosci: Array<{ age: number; value: number }> = [
-    { age: wiek_obecny, value: 0 },
-  ];
+  let wartosc = Math.max(0, kapital_poczatkowy);
 
-  let wartosc = 0;
+  const roczneWartosci: Array<{ age: number; value: number }> = [
+    { age: wiek_obecny, value: wartosc },
+  ];
 
   // Wartości portfela od obecnego wieku do wieku zakończenia pracy
   for (
@@ -231,12 +251,13 @@ export function wartosciPortfelaSymulacja(
   ile_akcji: number,
   ile_obligacji: number,
   skladka_miesieczna: number,
+  kapital_poczatkowy: number,
 ): ChartPoint[] {
-  const roczneWartosci: Array<{ age: number; value: number }> = [
-    { age: wiek_obecny, value: 0 },
-  ];
+  let wartosc = Math.max(0, kapital_poczatkowy);
 
-  let wartosc = 0;
+  const roczneWartosci: Array<{ age: number; value: number }> = [
+    { age: wiek_obecny, value: wartosc },
+  ];
 
   // Wartości portfela od obecnego wieku do wieku zakończenia pracy
   for (

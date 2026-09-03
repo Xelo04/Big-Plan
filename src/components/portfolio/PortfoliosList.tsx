@@ -1,52 +1,21 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "antd";
 import { WalletOutlined, PlusOutlined } from "@ant-design/icons";
-import { useNotify } from "../notifications/NotificationProvider";
 import PortfolioCard from "./PortfolioCard";
 import type { PortfolioListItemDTO } from "@/src/lib/portfolio/portfolio-types";
 import { useFxRates } from "@/src/lib/portfolio/use-fx-rates";
 
-export default function PortfoliosList() {
+type PortfoliosListProps = {
+  initialItems: PortfolioListItemDTO[];
+};
+
+export default function PortfoliosList({ initialItems }: PortfoliosListProps) {
   const router = useRouter();
-  const notify = useNotify();
   const { rates: fxRates } = useFxRates();
 
-  const [items, setItems] = useState<PortfolioListItemDTO[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    async function fetchPortfolios() {
-      try {
-        const res = await fetch("/api/portfolios", { credentials: "include" });
-        if (!res.ok) throw new Error("Fetch failed");
-        const data = await res.json();
-        setItems(data.items);
-      } catch {
-        notify.error({
-          title: "Błąd",
-          description: "Nie udało się pobrać portfeli.",
-        });
-      } finally {
-        setLoading(false);
-      }
-    }
-    fetchPortfolios();
-  }, [notify]);
-
-  if (loading) {
-    return (
-      <div className="w-full max-w-4xl mx-auto p-6 flex flex-col gap-4">
-        <h1 className="text-2xl font-semibold text-(--text) mb-2">
-          Moje portfele
-        </h1>
-        <div className="h-40 rounded-2xl bg-black/5 animate-pulse" />
-        <div className="h-40 rounded-2xl bg-black/5 animate-pulse" />
-      </div>
-    );
-  }
+  const items = initialItems;
 
   if (items.length === 0) {
     return (

@@ -49,6 +49,7 @@ type SimulationInputs = {
   monthlyNeed: number;
   stocksPct: number;
   monthlyInvestment: number;
+  currentPortfolioValue: number;
 };
 
 const sameInputs = (a: SimulationInputs | null, b: SimulationInputs | null) =>
@@ -61,7 +62,8 @@ const sameInputs = (a: SimulationInputs | null, b: SimulationInputs | null) =>
   a.estimatedPension === b.estimatedPension &&
   a.monthlyNeed === b.monthlyNeed &&
   a.stocksPct === b.stocksPct &&
-  a.monthlyInvestment === b.monthlyInvestment;
+  a.monthlyInvestment === b.monthlyInvestment &&
+  a.currentPortfolioValue === b.currentPortfolioValue;
 
 export default function Simulation({
   formValues,
@@ -110,6 +112,7 @@ export default function Simulation({
     monthlyNeed: formValues.monthlyNeed,
     stocksPct: portfolio.stocks,
     monthlyInvestment: userMonthlyInvestment ?? 0,
+    currentPortfolioValue: formValues.currentPortfolioValue ?? 0,
   });
   const [lastRunInputs, setLastRunInputs] = useState<SimulationInputs | null>(
     null,
@@ -160,6 +163,7 @@ export default function Simulation({
               stocksWeight,
               bondsWeight,
               payment,
+              inputs.currentPortfolioValue,
             );
             const finalValue =
               detailedChartData[detailedChartData.length - 1]?.value ?? 0;
@@ -229,6 +233,7 @@ export default function Simulation({
               stocksWeight,
               bondsWeight,
               optimizedMonthlyPayment,
+              inputs.currentPortfolioValue,
             );
 
             const finalValue =
@@ -251,6 +256,7 @@ export default function Simulation({
                 stocksWeight,
                 bondsWeight,
                 validUserMonthlyPayment,
+                inputs.currentPortfolioValue,
               );
 
               const userFinalValue =
@@ -355,6 +361,7 @@ export default function Simulation({
         monthlyNeed: formValues.monthlyNeed,
         stocksPct: portfolio.stocks,
         monthlyInvestment: userMonthlyInvestment ?? 0,
+        currentPortfolioValue: formValues.currentPortfolioValue ?? 0,
       });
     });
 
@@ -376,6 +383,7 @@ export default function Simulation({
     formValues.monthlyNeed,
     formValues.statePensionAge,
     formValues.workEndAge,
+    formValues.currentPortfolioValue,
     portfolio.stocks,
     userMonthlyInvestment,
     scheduleSimulation,
@@ -392,6 +400,7 @@ export default function Simulation({
         monthlyNeed: formValues.monthlyNeed,
         stocksPct: portfolio.stocks,
         monthlyInvestment: userMonthlyInvestment ?? 0,
+        currentPortfolioValue: formValues.currentPortfolioValue ?? 0,
       });
     });
   }, [
@@ -401,6 +410,7 @@ export default function Simulation({
     formValues.monthlyNeed,
     formValues.statePensionAge,
     formValues.workEndAge,
+    formValues.currentPortfolioValue,
     portfolio.stocks,
     userMonthlyInvestment,
   ]);
@@ -436,6 +446,7 @@ export default function Simulation({
         statePensionAge: lastRunInputs.statePensionAge,
         estimatedPension: lastRunInputs.estimatedPension,
         monthlyNeed: lastRunInputs.monthlyNeed,
+        currentPortfolioValue: lastRunInputs.currentPortfolioValue,
         stocksPct: lastRunInputs.stocksPct,
         bondsPct: 100 - lastRunInputs.stocksPct,
         knowsMonthlyAmount,
@@ -684,7 +695,7 @@ export default function Simulation({
                   Symulacja Monte Carlo
                 </p>
                 <h3 className="text-xl md:text-2xl font-semibold mt-1">
-                  Liczymy bezpieczne prognozy dla Twojego portfela
+                  Liczymy prognozy dla Twojego portfela
                 </h3>
               </div>
               <div className="h-11 w-11 rounded-full border-2 border-(--btn-border) border-t-(--accent) animate-spin" />

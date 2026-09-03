@@ -22,6 +22,7 @@ const updateSimulationSchema = z.object({
   statePensionAge: z.number().int().min(1),
   estimatedPension: z.number().min(0),
   monthlyNeed: z.number().min(0),
+  currentPortfolioValue: z.number().min(0).optional().default(0),
   stocksPct: z.number().int().min(0).max(100),
   bondsPct: z.number().int().min(0).max(100),
   knowsMonthlyAmount: z.boolean(),
@@ -54,7 +55,7 @@ export async function GET(
       .from("saved_simulation")
       .select(
         `id, name, userId, currentAge, expectedDeathAge, workEndAge, statePensionAge,
-         estimatedPension, monthlyNeed, stocksPct, bondsPct, knowsMonthlyAmount,
+         estimatedPension, monthlyNeed, currentPortfolioValue, stocksPct, bondsPct, knowsMonthlyAmount,
          userMonthlyInvestment, recommendedMonthlyPayment, simulationSuccessRate,
          userSimulationSuccessRate, recommendedChartPercentiles, userChartPercentiles,
          totalSimulations, createdAt, updatedAt`,
@@ -73,8 +74,10 @@ export async function GET(
       return NextResponse.json({ error: "Brak uprawnień." }, { status: 403 });
     }
 
-    const { userId: _u, ...safe } = simulation;
-    return NextResponse.json({ simulation: safe }, { status: 200 });
+    const safeSimulation = { ...simulation };
+    delete (safeSimulation as { userId?: string }).userId;
+
+    return NextResponse.json({ simulation: safeSimulation }, { status: 200 });
   } catch (err) {
     console.error("GET simulation error:", err);
     return NextResponse.json(
@@ -144,6 +147,7 @@ export async function PUT(
         statePensionAge: data.statePensionAge,
         estimatedPension: data.estimatedPension,
         monthlyNeed: data.monthlyNeed,
+        currentPortfolioValue: data.currentPortfolioValue ?? 0,
         stocksPct: data.stocksPct,
         bondsPct: data.bondsPct,
         knowsMonthlyAmount: data.knowsMonthlyAmount,
@@ -163,11 +167,17 @@ export async function PUT(
     if (error) throw error;
 
     return NextResponse.json(
-      { ok: true, simulation: { id: simulation.id, name: simulation.name } },
+      {
+        ok: true,
+        simulation: {
+          id: simulation.id,
+          name: simulation.name,
+        },
+      },
       { status: 200 },
     );
   } catch (err) {
-    console.error("PUT simulation error:", err);
+    console.error("PUT /api/simulations/[id] error:", err);
     return NextResponse.json(
       { error: "Wystąpił błąd serwera." },
       { status: 500 },
