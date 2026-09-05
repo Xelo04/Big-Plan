@@ -5,7 +5,6 @@ import {
   SafetyCertificateOutlined,
   RiseOutlined,
   PieChartOutlined,
-  DollarOutlined,
 } from "@ant-design/icons";
 
 export default function HeroVisual() {
@@ -119,7 +118,7 @@ export default function HeroVisual() {
           </div>
         </div>
 
-        {/* KARTA 2: Wskaźnik Bezpieczeństwa    */}
+        {/* KARTA 2: Wskaźnik skuteczności planu    */}
         <div
           className="absolute -right-6 -top-4 rounded-2xl border border-(--btn-border) p-4 backdrop-blur-xl bg-(--card-background) shadow-xl flex items-center gap-3"
           style={{
@@ -133,9 +132,7 @@ export default function HeroVisual() {
             <p className="text-[10px] uppercase tracking-wider text-(--muted)">
               Skuteczność Planu
             </p>
-            <p className="text-sm font-bold text-(--text) mt-0.5">
-              90.4% Bezpieczeństwa
-            </p>
+            <p className="text-sm font-bold text-(--text) mt-0.5">90.4%</p>
           </div>
         </div>
 
@@ -167,26 +164,6 @@ export default function HeroVisual() {
             <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-medium inline-block mt-1 bg-emerald-500/10 px-2 py-0.5 rounded-full">
               ✓ Zrównoważony
             </span>
-          </div>
-        </div>
-
-        {/* KARTA 4: Wpłata Miesięczna */}
-        <div
-          className="absolute right-4 -bottom-6 rounded-2xl border border-(--btn-border) px-4 py-3 backdrop-blur-xl bg-(--card-background) shadow-xl flex items-center gap-3"
-          style={{
-            transform: "translateZ(60px)",
-          }}
-        >
-          <div className="w-8 h-8 rounded-lg bg-blue-500/15 flex items-center justify-center text-blue-600 dark:text-blue-400">
-            <DollarOutlined style={{ fontSize: 16 }} />
-          </div>
-          <div>
-            <p className="text-[10px] text-(--muted) uppercase tracking-wider">
-              Rekomendacja
-            </p>
-            <p className="text-sm font-bold text-(--text) mt-0.5">
-              500 PLN / mies.
-            </p>
           </div>
         </div>
       </div>

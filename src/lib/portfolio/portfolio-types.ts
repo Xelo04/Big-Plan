@@ -49,6 +49,7 @@ export type CreateAssetPayload = {
   currentPrice: number;
   currency: string;
   customFxRate?: number | null;
+  merge?: boolean;
 };
 
 export type UpdateAssetPayload = CreateAssetPayload;

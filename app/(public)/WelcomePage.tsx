@@ -135,7 +135,7 @@ export default function WelcomePage() {
                   />
                 ),
                 title: "Oszacuj prawdopodobieństwo",
-                desc: "Nasz symulator sprawdzi 10 000 wariantów historycznych, podając Ci precyzyjną, bezpieczną kwotę jaką musisz odkładać.",
+                desc: "Nasz symulator sprawdzi 10 000 wariantów historycznych, podając Ci precyzyjną kwotę jaką musisz odkładać.",
               },
               {
                 num: "03",
@@ -198,7 +198,7 @@ export default function WelcomePage() {
               {
                 icon: <GlobalOutlined />,
                 title: "Multiwalutowość",
-                desc: "Dodawaj do portfela aktywa w EUR, USD, GBP czy CHF. Kursy pobierane są automatycznie z Narodowego Banku Polskiego, a wszystkie kwoty przeliczane na PLN.",
+                desc: "Dodawaj do portfela aktywa w EUR, USD, GBP czy CHF. Kursy pobierane są automatycznie z NBP, a wszystkie kwoty przeliczane na PLN.",
               },
               {
                 icon: <CloudOutlined />,
@@ -209,11 +209,15 @@ export default function WelcomePage() {
                 icon: <RocketOutlined />,
                 title: "Rozpocznij od zaraz",
                 desc: "Nie musisz podpinać konta maklerskiego. Przetestuj pierwszą symulację bez logowania w 2 minuty.",
+                cta: {
+                  label: "Kalkulator bez logowania",
+                  href: "/calculator",
+                },
               },
             ].map((feature) => (
               <div
                 key={feature.title}
-                className="group rounded-2xl border border-(--btn-border) p-6 bg-(--card-background) hover:border-blue-500/40 transition-all hover:shadow-lg hover:shadow-blue-500/10"
+                className="group rounded-2xl border border-(--btn-border) p-6 bg-(--card-background) hover:border-blue-500/40 transition-all hover:shadow-lg hover:shadow-blue-500/10 flex flex-col"
               >
                 <div className="w-12 h-12 rounded-xl bg-linear-to-br from-blue-500/20 to-blue-600/20 border border-blue-500/30 flex items-center justify-center text-blue-500 text-xl mb-4 group-hover:scale-110 transition-transform">
                   {feature.icon}
@@ -224,6 +228,17 @@ export default function WelcomePage() {
                 <p className="text-sm text-(--muted) leading-relaxed">
                   {feature.desc}
                 </p>
+
+                {feature.cta && (
+                  <button
+                    type="button"
+                    onClick={() => router.push(feature.cta.href)}
+                    className="cursor-pointer inline-flex items-center justify-center gap-2 mt-4 px-4 py-2 rounded-lg text-sm font-semibold border-2 border-(--btn-border) text-(--text) hover:border-blue-500/50 hover:text-blue-500 transition-all self-start"
+                  >
+                    {feature.cta.label}
+                    <ArrowRightOutlined />
+                  </button>
+                )}
               </div>
             ))}
           </div>

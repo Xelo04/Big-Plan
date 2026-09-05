@@ -40,7 +40,7 @@ export default function SimulationNominalTab({
               Rekomendacja składki
             </p>
             <Tooltip
-              title={`Symulacja analizuje ${totalSimulations.toLocaleString("pl-PL")} scenariuszy rynkowych i dla każdego oblicza końcową wartość portfela. Na tej podstawie kalibrowana jest składka miesięczna tak, aby osiągnąć docelowy poziom bezpieczeństwa i zwiększyć szanse utrzymania dodatniego salda portfela na końcu horyzontu.`}
+              title={`Symulacja analizuje ${totalSimulations.toLocaleString("pl-PL")} scenariuszy rynkowych i dla każdego oblicza końcową wartość portfela. Na tej podstawie kalibrowana jest składka miesięczna tak, aby osiągnąć docelowy poziom przeżywalności symulacji i zwiększyć szanse utrzymania dodatniego salda portfela na końcu horyzontu.`}
               styles={{ root: { maxWidth: 360, fontSize: 13 } }}
               getPopupContainer={(trigger) =>
                 trigger?.parentElement || document.body

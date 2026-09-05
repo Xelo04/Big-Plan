@@ -109,6 +109,48 @@ export default function PortfolioDetails({
         body: JSON.stringify(payload),
       });
 
+      const data = await res.json();
+
+      // Jeśli backend wykryje duplikat, pyta użytkownika o zgodę
+      if (res.status === 409 && data.error === "duplicate_found") {
+        setSaving(false);
+        modal.confirm({
+          title: "Aktywo już istnieje",
+          content: `Masz już w portfelu pozycję z tą samą nazwą lub tickerem ("${data.existingAsset.name}"). Czy chcesz scalić te pozycje? System automatycznie wyliczy nową, średnią cenę zakupu.`,
+          okText: "Tak, scal aktywa",
+          cancelText: "Anuluj",
+          onOk: async () => {
+            setSaving(true);
+            try {
+              const retryRes = await fetch(url, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                credentials: "include",
+                body: JSON.stringify({ ...payload, merge: true }),
+              });
+
+              if (!retryRes.ok) throw new Error("Błąd scalania.");
+
+              notify.success({
+                title: "Aktywo scalone",
+                description: `Pomyślnie zaktualizowano pozycję "${payload.name}".`,
+              });
+              setFormOpen(false);
+              setEditingAsset(null);
+              router.refresh();
+            } catch {
+              notify.error({
+                title: "Błąd",
+                description: "Wystąpił błąd podczas scalania.",
+              });
+            } finally {
+              setSaving(false);
+            }
+          },
+        });
+        return;
+      }
+
       if (!res.ok) throw new Error("Błąd");
 
       notify.success({
@@ -117,7 +159,7 @@ export default function PortfolioDetails({
       });
       setFormOpen(false);
       setEditingAsset(null);
-      await refreshPortfolio();
+      router.refresh();
     } catch {
       notify.error({ title: "Błąd zapisu", description: "Wystąpił błąd." });
     } finally {

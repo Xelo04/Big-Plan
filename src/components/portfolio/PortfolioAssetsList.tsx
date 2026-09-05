@@ -1,6 +1,7 @@
 "use client";
 
-import { DeleteOutlined, EditOutlined } from "@ant-design/icons";
+import { DeleteOutlined, EditOutlined, ApiOutlined } from "@ant-design/icons";
+import { Tooltip } from "antd";
 import {
   ASSET_CATEGORY_LABELS,
   type AssetCategory,
@@ -68,8 +69,16 @@ export default function PortfolioAssetsList({
                     {asset.name}
                   </h3>
                   {asset.ticker && (
-                    <span className="text-xs font-mono px-2 py-0.5 rounded bg-black/10 text-(--muted)">
+                    <span className="inline-flex items-center gap-1 text-xs font-mono px-2 py-0.5 rounded bg-black/10 text-(--muted)">
                       {asset.ticker}
+                      <Tooltip title="Cena tego aktywa jest automatycznie aktualizowana z giełdy (Yahoo Finance)">
+                        <ApiOutlined
+                          style={{
+                            fontSize: 12,
+                            color: "#10b981",
+                          }}
+                        />
+                      </Tooltip>
                     </span>
                   )}
                   <span

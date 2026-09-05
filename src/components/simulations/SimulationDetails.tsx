@@ -121,7 +121,7 @@ export default function SimulationDetails({
             Rekomendacja składki
           </p>
           <Tooltip
-            title={`Symulacja przeanalizowała ${totalSimulations.toLocaleString("pl-PL")} scenariuszy rynkowych. Rekomendowana składka pozwala osiągnąć wysoki poziom bezpieczeństwa portfela.`}
+            title={`Symulacja przeanalizowała ${totalSimulations.toLocaleString("pl-PL")} scenariuszy rynkowych. Rekomendowana składka pozwala osiągnąć wysoki poziom przeżywalności portfela.`}
             styles={{ root: { maxWidth: 360, fontSize: 13 } }}
           >
             <InfoCircleOutlined

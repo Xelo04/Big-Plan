@@ -94,7 +94,7 @@ const CustomTooltip = ({
       }}
     >
       <p style={{ margin: "0 0 6px 0", fontWeight: 500 }}>
-        Rok: {label ?? "-"}
+        Rok życia: {label ?? "-"}
       </p>
       {percentiles.map((item) => (
         <p

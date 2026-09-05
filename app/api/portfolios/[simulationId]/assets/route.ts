@@ -12,6 +12,7 @@ const createAssetSchema = z.object({
   currentPrice: z.number().nonnegative(),
   currency: z.string().trim().min(1).max(10),
   customFxRate: z.number().positive().optional().nullable(),
+  merge: z.boolean().optional(),
 });
 
 export async function POST(
@@ -47,7 +48,9 @@ export async function POST(
       );
     }
 
-    // upsert portfolio
+    const data = parsed.data;
+
+    // Upsert portfolio
     let portfolioId: string;
     const { data: existingPortfolio } = await supabase
       .from("portfolio")
@@ -70,24 +73,97 @@ export async function POST(
         })
         .select("id")
         .single();
+
       if (createPortError) throw createPortError;
       portfolioId = created.id;
     }
 
+    // 1. SZUKANIE DUPLIKATU w Supabase (po Tickerze ALBO po Nazwie)
+    const normalizedTicker = data.ticker?.trim().toUpperCase() ?? null;
+    const normalizedName = data.name.trim().toLowerCase();
+
+    const { data: existingAssets, error: fetchAssetsError } = await supabase
+      .from("portfolio_asset")
+      .select("id, name, ticker, quantity, averagePrice, customFxRate")
+      .eq("portfolioId", portfolioId)
+      .eq("currency", data.currency);
+
+    if (fetchAssetsError) throw fetchAssetsError;
+
+    const duplicateAsset = (existingAssets ?? []).find((a) => {
+      const tickerMatch =
+        normalizedTicker &&
+        a.ticker &&
+        a.ticker.trim().toUpperCase() === normalizedTicker;
+      const nameMatch =
+        a.name && a.name.trim().toLowerCase() === normalizedName;
+      return tickerMatch || nameMatch;
+    });
+
+    if (duplicateAsset) {
+      // 2. Jeśli znaleziono duplikat, ale klient NIE wysłał "merge: true" -> zwracamy kod 409 Conflict
+      if (!data.merge) {
+        return NextResponse.json(
+          {
+            error: "duplicate_found",
+            existingAsset: {
+              id: duplicateAsset.id,
+              name: duplicateAsset.name,
+            },
+          },
+          { status: 409 },
+        );
+      }
+
+      // 3. Jeśli klient potłumaczył w Modalu "Tak, scal" i przysłał "merge: true" -> robimy UPDATE
+      const oldTotalCost =
+        duplicateAsset.quantity * duplicateAsset.averagePrice;
+      const newTotalCost = data.quantity * data.averagePrice;
+      const totalQuantity = duplicateAsset.quantity + data.quantity;
+      const newAveragePrice =
+        totalQuantity > 0
+          ? (oldTotalCost + newTotalCost) / totalQuantity
+          : data.averagePrice;
+
+      const now = new Date().toISOString();
+
+      const { data: mergedAsset, error: updateError } = await supabase
+        .from("portfolio_asset")
+        .update({
+          quantity: totalQuantity,
+          averagePrice: newAveragePrice,
+          currentPrice: data.currentPrice,
+          customFxRate:
+            data.customFxRate ?? duplicateAsset.customFxRate ?? null,
+          updatedAt: now,
+        })
+        .eq("id", duplicateAsset.id)
+        .select("*")
+        .single();
+
+      if (updateError) throw updateError;
+
+      return NextResponse.json(
+        { ok: true, asset: mergedAsset, merged: true },
+        { status: 200 },
+      );
+    }
+
+    // 4. Jeśli brak duplikatu -> zwykły INSERT
     const now = new Date().toISOString();
     const { data: asset, error: assetError } = await supabase
       .from("portfolio_asset")
       .insert({
         id: newId(),
         portfolioId,
-        name: parsed.data.name,
-        ticker: parsed.data.ticker ?? null,
-        category: parsed.data.category,
-        quantity: parsed.data.quantity,
-        averagePrice: parsed.data.averagePrice,
-        currentPrice: parsed.data.currentPrice,
-        currency: parsed.data.currency,
-        customFxRate: parsed.data.customFxRate ?? null,
+        name: data.name,
+        ticker: normalizedTicker,
+        category: data.category,
+        quantity: data.quantity,
+        averagePrice: data.averagePrice,
+        currentPrice: data.currentPrice,
+        currency: data.currency,
+        customFxRate: data.customFxRate ?? null,
         createdAt: now,
         updatedAt: now,
       })
@@ -96,7 +172,10 @@ export async function POST(
 
     if (assetError) throw assetError;
 
-    return NextResponse.json({ ok: true, asset }, { status: 201 });
+    return NextResponse.json(
+      { ok: true, asset, merged: false },
+      { status: 201 },
+    );
   } catch (err) {
     console.error("POST asset error:", err);
     return NextResponse.json({ error: "Błąd serwera." }, { status: 500 });

@@ -166,20 +166,8 @@ export default function AssetFormModal({
       width={560}
     >
       <div className="flex flex-col gap-4 py-2">
-        <div>
-          <label className="block text-sm font-medium text-(--text) mb-1.5">
-            Nazwa <span className="text-red-500">*</span>
-          </label>
-          <Input
-            placeholder="np. Apple Inc., ETF SP500, Obligacje EDO"
-            maxLength={120}
-            value={form.name}
-            onChange={(e) => setForm({ ...form, name: e.target.value })}
-            size="large"
-          />
-        </div>
-
-        <div className="grid grid-cols-2 gap-3">
+        <div className="flex flex-col gap-4 py-2">
+          {/* 1. Ticker (na górze, żeby móc pobrać nazwę z giełdy) */}
           <div>
             <label className="block text-sm font-medium text-(--text) mb-1.5">
               Ticker (opcjonalnie)
@@ -203,44 +191,65 @@ export default function AssetFormModal({
                 title="Pobierz cenę z giełdy"
               />
             </div>
+            <p className="text-xs text-(--muted) mt-1.5">
+              Wpisz ticker i kliknij lupkę, aby automatycznie pobrać nazwę,
+              aktualną cenę oraz walutę.
+            </p>
           </div>
 
+          {/* 2. Nazwa */}
           <div>
             <label className="block text-sm font-medium text-(--text) mb-1.5">
-              Kategoria <span className="text-red-500">*</span>
+              Nazwa <span className="text-red-500">*</span>
             </label>
-            <Select
-              value={form.category}
-              onChange={(value) => setForm({ ...form, category: value })}
+            <Input
+              placeholder="np. Apple Inc., ETF SP500, Obligacje EDO"
+              maxLength={120}
+              value={form.name}
+              onChange={(e) => setForm({ ...form, name: e.target.value })}
               size="large"
-              style={{ width: "100%" }}
-              options={ASSET_CATEGORIES.map((c) => ({
-                value: c,
-                label: ASSET_CATEGORY_LABELS[c],
-              }))}
             />
           </div>
-        </div>
 
-        <div>
-          <label className="block text-sm font-medium text-(--text) mb-1.5">
-            Ilość sztuk <span className="text-red-500">*</span>
-          </label>
-          <InputNumber
-            placeholder="np. 10"
-            min={0}
-            step={0.0001}
-            value={form.quantity}
-            onChange={(value) => setForm({ ...form, quantity: value })}
-            size="large"
-            style={{ width: "100%" }}
-          />
+          {/* 3. Kategoria + Ilość */}
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-sm font-medium text-(--text) mb-1.5">
+                Kategoria <span className="text-red-500">*</span>
+              </label>
+              <Select
+                value={form.category}
+                onChange={(value) => setForm({ ...form, category: value })}
+                size="large"
+                style={{ width: "100%" }}
+                options={ASSET_CATEGORIES.map((c) => ({
+                  value: c,
+                  label: ASSET_CATEGORY_LABELS[c],
+                }))}
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-(--text) mb-1.5">
+                Ilość sztuk <span className="text-red-500">*</span>
+              </label>
+              <InputNumber
+                placeholder="np. 10"
+                min={0}
+                step={0.0001}
+                value={form.quantity}
+                onChange={(value) => setForm({ ...form, quantity: value })}
+                size="large"
+                style={{ width: "100%" }}
+              />
+            </div>
+          </div>
         </div>
 
         <div className="grid grid-cols-2 gap-3">
           <div>
             <label className="block text-sm font-medium text-(--text) mb-1.5">
-              Cena zakupu (średnia) <span className="text-red-500">*</span>
+              Cena zakupu jednostki <span className="text-red-500">*</span>
             </label>
             <InputNumber
               placeholder="np. 150"

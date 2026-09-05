@@ -64,7 +64,7 @@ export default function PortfolioMiniChart({
               formatValue(Number(value ?? 0)) + " zł",
               "Wartość",
             ]}
-            labelFormatter={(label) => `Rok: ${String(label ?? "-")}`}
+            labelFormatter={(label) => `Rok życia: ${String(label ?? "-")}`}
             contentStyle={{
               borderRadius: 10,
               border: "1px solid var(--btn-border)",
