@@ -326,6 +326,11 @@ export default function AssetFormModal({
                 } PLN).`}
           </p>
         )}
+        <p className="text-[11px] text-(--muted) leading-tight opacity-75">
+          Notowania i kursy mają charakter wyłącznie informacyjny. Przeszłe
+          wyniki nie gwarantują podobnych wyników w przyszłości. Inwestowanie
+          wiąże się z ryzykiem utraty kapitału. To nie jest porada inwestycyjna.
+        </p>
       </div>
     </Modal>
   );

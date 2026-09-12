@@ -1,184 +1,208 @@
 # Big Plan
 
-Big Plan to zaawansowana aplikacja Next.js do planowania finansowego, symulacji inwestycyjnych oraz zarządzania portfelem aktywów.
+Big Plan to aplikacja webowa do planowania finansowego, symulacji inwestycyjnych i monitorowania rzeczywistego portfela aktywów.
 
-Aplikacja zawiera uwierzytelnianie oparte o `better-auth` (w tym rejestrację przez Google), profile użytkowników, weryfikację e-mail, kalkulator emerytalny z silnikiem symulacji Monte Carlo, moduł do zapisywania i edycji planów finansowych oraz moduł rzeczywistego portfela aktywów z automatyczną synchronizacją cen giełdowych, przeliczaniem walut i silnikiem rebalancingu.
+## Funkcjonalności
 
-## Główne Funkcjonalności
+- rejestracja i logowanie przez e-mail/hasło oraz Google OAuth,
+- weryfikacja adresu e-mail, reset i zmiana hasła,
+- profil użytkownika z avatarem, preferencjami i wylogowaniem ze wszystkich urządzeń,
+- kalkulator inwestycyjny z symulacją Monte Carlo oraz wykresami Recharts,
+- zapisywanie, edycja, ponowne przeliczanie i usuwanie symulacji,
+- dashboard z podsumowaniem symulacji i portfeli,
+- portfele powiązane z zapisanymi symulacjami,
+- dodawanie i edycja aktywów, między innymi akcji, ETF-ów i obligacji,
+- automatyczne pobieranie cen aktywów z Yahoo Finance,
+- pobieranie kursów walut z NBP i przeliczanie wartości portfela na PLN,
+- analiza odchyleń alokacji i propozycje rebalancingu,
+- panel administracyjny dla użytkowników z odpowiednią rolą,
+- jasny i ciemny motyw interfejsu.
 
-- **Uwierzytelnianie i Profil**: Logowanie e-mail/hasło oraz Google OAuth, obsługa weryfikacji adresu e-mail, przesyłanie i kadrowanie avatarów, zmiana hasła w modalu oraz przycisk wylogowania ze wszystkich urządzeń.
-- **Kalkulator & Symulacje Monte Carlo**: Wyliczanie bezwzględnych i rekomendowanych składek emerytalnych na podstawie 10 000 scenariuszy rynkowych (percentyle P5, P25, P50, P75, P95).
-- **Zapisywanie Symulacji**: Zapisywanie wyników symulacji do bazy danych (z limitem 3 na konto) oraz mechanizm persystencji w `localStorage` pozwalający bezproblemowo zapisać symulację po zalogowaniu/rejestracji.
-- **Zarządzanie Symulacjami (`/my-simulations`)**: Dedykowany moduł ze szczegółowym podglądem zapisanych symulacji, dedykowanym edytorem umożliwiającym re-kalkulację na nowych danych oraz usuwaniem.
-- **Zarządzanie Portfelem (`/my-portfolios`)**: Portfele przypisane 1:1 do konkretnych symulacji. Możliwość śledzenia rzeczywistego stanu majątku (akcje, ETF-y, obligacje).
-- **Rzeczywiste Notowania i Waluty**:
-  - Automatyczne kursy walut w czasie rzeczywistym z **NBP API** (USD, EUR, GBP, CHF → PLN).
-  - Automatyczna aktualizacja cen aktywów z giełdy w tle oraz pobieranie cen po tickerze z **Yahoo Finance API** (`yahoo-finance2`).
-- **Silnik Rebalancingu**: Detekcja odchylenia alokacji portfela od celu z symulacji. System generuje ostrzeżenia (progi 5% i 10%) i podpowiada precyzyjne kroki do wykonania w dwóch wariantach: **Wariant A** (Sprzedaj / Kup) oraz **Wariant B** (Sama dopłata nowej gotówki bez sprzedaży).
+## Stack technologiczny
 
----
+- **Next.js 16** z App Routerem i TypeScriptem,
+- **React 19**,
+- **Ant Design 6** oraz Tailwind CSS 4,
+- **better-auth** z adapterem PostgreSQL (`pg`),
+- **Supabase** jako backend danych aplikacji i storage avatarów,
+- **Recharts** do wizualizacji danych,
+- **Resend** do wysyłki wiadomości e-mail,
+- **Yahoo Finance** do notowań aktywów,
+- **NBP API** do kursów walut,
+- **Netlify** jako docelowa platforma wdrożeniowa.
+
+## Uruchomienie lokalne
+
+Wymagane jest Node.js oraz skonfigurowany projekt Supabase i dostawca Google OAuth.
+
+1. Zainstaluj zależności:
+
+   ```bash
+   npm install
+   ```
+
+2. Utwórz plik `.env.local` i uzupełnij zmienne:
+
+   ```env
+   DATABASE_URL=postgresql://...
+   # Opcjonalnie używane jako alternatywne połączenie PostgreSQL
+   DIRECT_URL=postgresql://...
+
+   SUPABASE_URL=https://....supabase.co
+   SUPABASE_SERVICE_ROLE_KEY=...
+
+   GOOGLE_CLIENT_ID=...
+   GOOGLE_CLIENT_SECRET=...
+   NEXT_PUBLIC_APP_URL=http://localhost:3000
+
+   RESEND_API_KEY=...
+   ```
+
+   `SUPABASE_SERVICE_ROLE_KEY` jest używany wyłącznie po stronie serwera i nie może być udostępniany w kodzie klienta.
+
+3. Uruchom serwer deweloperski:
+
+   ```bash
+   npm run dev
+   ```
+
+   Aplikacja będzie dostępna pod adresem `http://localhost:3000`.
+
+## Skrypty npm
+
+| Polecenie       | Działanie                              |
+| --------------- | -------------------------------------- |
+| `npm run dev`   | Uruchamia serwer deweloperski Next.js. |
+| `npm run build` | Tworzy produkcyjny build aplikacji.    |
+| `npm run start` | Uruchamia aplikację z gotowego buildu. |
+| `npm run lint`  | Uruchamia ESLint.                      |
+
+## Główne trasy
+
+### Publiczne
+
+- `/` - strona startowa,
+- `/calculator` - kalkulator i symulacja inwestycyjna,
+- `/sign-in` - logowanie,
+- `/sign-up` - rejestracja,
+- `/forgot-password` - rozpoczęcie resetu hasła,
+- `/reset-password` - ustawienie nowego hasła,
+- `/verify-email` - weryfikacja adresu e-mail.
+
+### Chronione
+
+- `/dashboard` - podsumowanie finansowe użytkownika,
+- `/my-simulations` - zapisane symulacje,
+- `/my-simulations/[id]` - szczegóły symulacji,
+- `/my-simulations/edit/[id]` - edycja i ponowne przeliczenie symulacji,
+- `/my-portfolios` - lista portfeli,
+- `/my-portfolios/[simulationId]` - szczegóły portfela i aktywów,
+- `/profile` - profil i ustawienia konta,
+- `/email-verified` - ekran po poprawnej weryfikacji,
+- `/admin` - panel administracyjny.
+
+## API
+
+- `/api/auth/[...all]` - endpointy `better-auth`,
+- `/api/simulations` oraz `/api/simulations/[id]` - operacje na symulacjach,
+- `/api/portfolios` oraz `/api/portfolios/[simulationId]` - operacje na portfelach,
+- `/api/portfolios/[simulationId]/assets` - dodawanie, edycja i usuwanie aktywów,
+- `/api/portfolios/[simulationId]/sync` - synchronizacja cen z Yahoo Finance,
+- `/api/ticker` - pobieranie notowania pojedynczego instrumentu,
+- `/api/fx` - pobieranie kursów walut z NBP,
+- `/api/user/avatar` - upload i aktualizacja avatara,
+- `/api/user/email` - obsługa tymczasowego adresu e-mail.
 
 ## Struktura projektu
 
-- `.env` - lokalne zmienne środowiskowe i sekrety dla bazy danych, auth, wysyłki e-maili oraz zewnętrznych API.
-- `.gitignore` - lista plików i katalogów wykluczonych z repozytorium.
-- `eslint.config.mjs` - konfiguracja ESLint dla Next.js i TypeScript.
-- `global.d.ts` - globalne deklaracje typów dla assetów importowanych w projekcie.
-- `next-env.d.ts` - typy generowane przez Next.js; plik pomocniczy dla TypeScript.
-- `next.config.ts` - konfiguracja Next.js, w tym obrazy z Google i opcje auth.
-- `package-lock.json` - zablokowane wersje zależności npm.
-- `package.json` - skrypty, zależności i metadane projektu.
-- `postcss.config.mjs` - konfiguracja PostCSS z Tailwind CSS.
-- `prisma.config.ts` - konfiguracja CLI Prisma, ścieżki schematu i migracji.
-- `README.md` - dokumentacja repozytorium.
-- `tsconfig.json` - konfiguracja TypeScript oraz aliasów importów.
+```text
+app/
+   layout.tsx                    Główny layout, fonty, motyw i provider powiadomień
+   globals.css                   Globalne style i tokeny motywu
+   not-found.tsx                 Strona 404
+   unauthorized.tsx              Strona 401
+   forbidden.tsx                 Strona 403
+   favicon.ico                   Ikona aplikacji
+   (auth)/                       Layout i strony uwierzytelniania
+      layout.tsx
+      sign-in/                    Logowanie e-mail/hasło i Google
+      sign-up/                    Rejestracja e-mail/hasło i Google
+      forgot-password/            Żądanie resetu hasła
+      reset-password/             Ustawienie nowego hasła
+      verify-email/               Weryfikacja adresu e-mail
+   (public)/                     Strony dostępne bez logowania
+      layout.tsx                  Header, Footer i publiczny układ strony
+      page.tsx                    Strona startowa
+      WelcomePage.tsx             Treść strony startowej i wykres demonstracyjny
+      HeroVisual.tsx              Wizualizacja sekcji hero
+      loading.tsx                 Stan ładowania stron publicznych
+      calculator/                 Kalkulator i dane symulacji
+         page.tsx
+         calculator.ts             Funkcje obliczeniowe
+         calculatorData.json       Dane wejściowe
+         calculatorAverageData.json Dane uśrednione
+         calculatorArchive.ts      Archiwalne warianty obliczeń
+   (protected)/                  Strony wymagające aktywnej sesji
+      layout.tsx                  Layout chroniony i obsługa akcji po auth
+      loading.tsx                 Stan ładowania
+      dashboard/                  Dashboard użytkownika
+      my-simulations/             Lista, szczegóły i edycja symulacji
+         [id]/
+         edit/[id]/
+      my-portfolios/              Lista i szczegóły portfeli
+         [simulationId]/
+      profile/                    Profil i ustawienia konta
+      email-verified/             Potwierdzenie weryfikacji e-maila
+      admin/                      Panel administracyjny
+   api/                          Route handlers backendowe
+      auth/[...all]/               Endpointy better-auth
+      simulations/                 CRUD zapisanych symulacji
+         [id]/
+      portfolios/                  CRUD portfeli
+         [simulationId]/
+            assets/                  CRUD aktywów portfela
+            sync/                    Synchronizacja cen z Yahoo Finance
+      ticker/                      Notowanie pojedynczego instrumentu
+      fx/                          Kursy walut z NBP
+      user/avatar/                 Upload avatara do Supabase Storage
+      user/email/                  Obsługa tymczasowego adresu e-mail
 
-- `app/`
-  - `favicon.ico` - ikona aplikacji wyświetlana w przeglądarce.
-  - `forbidden.tsx` - strona 403 dla braku uprawnień.
-  - `globals.css` - globalne style, zmienne kolorów, reguły motywów oraz style komponentów Ant Design.
-  - `layout.tsx` - główny layout aplikacji, fonty Geist, ThemeProvider i NotificationProvider.
-  - `not-found.tsx` - własna strona 404.
-  - `unauthorized.tsx` - strona 401 z przekierowaniem do logowania.
-  - `(auth)/`
-    - `layout.tsx` - layout strefy auth z Header/Footer i przekierowaniami zależnymi od sesji.
-    - `forgot-password/`
-      - `ForgotPassword.tsx` - formularz wysyłki prośby o reset hasła.
-      - `page.tsx` - route strony zapomnianego hasła.
-    - `reset-password/`
-      - `page.tsx` - route resetu hasła, sprawdza token w parametrze URL.
-      - `ResetPasswordForm.tsx` - formularz ustawiania nowego hasła.
-    - `sign-in/`
-      - `page.tsx` - route logowania.
-      - `SignInForm.tsx` - formularz logowania użytkownika z obsługą reakcji na zapis symulacji.
-    - `sign-up/`
-      - `page.tsx` - route rejestracji.
-      - `SignUpForm.tsx` - formularz tworzenia konta i rejestracji przez Google.
-    - `verify-email/`
-      - `page.tsx` - route ekranu weryfikacji e-maila.
-      - `VerifyEmail.tsx` - widok z możliwością ponownego wysłania maila weryfikacyjnego.
-  - `(protected)/`
-    - `layout.tsx` - layout strefy chronionej z dołączonym `PostAuthHandler`.
-    - `admin/`
-      - `page.tsx` - chroniona strona administracyjna dla roli ADMIN.
-    - `dashboard/`
-      - `page.tsx` - główny dashboard użytkownika.
-    - `email-verified/`
-      - `EmailVerified.tsx` - ekran potwierdzający poprawną weryfikację e-maila.
-      - `page.tsx` - route ekranu po weryfikacji adresu e-mail.
-    - `my-portfolios/`
-      - `page.tsx` - lista wszystkich portfeli użytkownika (`PortfoliosList`).
-      - `[simulationId]/`
-        - `page.tsx` - szczegóły portfela i zarządzanie aktywami (`PortfolioDetails`).
-    - `my-simulations/`
-      - `page.tsx` - lista zapisanych symulacji użytkownika (`SimulationsList`).
-      - `[id]/`
-        - `page.tsx` - podgląd szczegółów zapisanej symulacji (`SimulationDetails`).
-      - `edit/[id]/`
-        - `page.tsx` - dedykowany edytor symulacji z możliwością re-kalkulacji (`SimulationEditor`).
-    - `profile/`
-      - `ChangePasswordForm.tsx` - formularz zmiany hasła otwierany w modalu.
-      - `page.tsx` - route profilu użytkownika.
-      - `Profile.tsx` - karta profilu z danymi konta i subskrypcji.
-      - `ProfilePicture.tsx` - upload i podgląd zdjęcia profilowego.
-      - `SignOutEverywhereButton.tsx` - przycisk wylogowania ze wszystkich urządzeń.
-  - `(public)/`
-    - `layout.tsx` - layout publicznych stron z Header/Footer.
-    - `page.tsx` - strona startowa, renderuje WelcomePage.
-    - `WelcomePage.tsx` - strona powitalna z demonstracyjnym wykresem Recharts.
-    - `calculator/`
-      - `calculator.ts` - funkcje obliczeń portfela, składki i symulacji finansowych.
-      - `calculatorArchive.ts` - archiwalne i komentowane warianty wcześniejszych wzorów kalkulatora.
-      - `calculatorAverageData.json` - uśrednione dane wejściowe do obliczeń i wykresów.
-      - `calculatorData.csv` - surowe dane historyczne dla symulacji.
-      - `calculatorData.json` - ustrukturyzowane dane źródłowe dla symulacji portfela.
-      - `page.tsx` - route kalkulatora inwestycyjnego.
-  - `api/`
-    - `auth/`
-      - `[...all]/route.ts` - adapter endpointów better-auth dla logowania, rejestracji, sesji i OIDC Google.
-    - `fx/`
-      - `route.ts` - pobieranie i cache'owanie aktualnych kursów walut z API NBP (USD, EUR, GBP, CHF).
-    - `portfolios/`
-      - `route.ts` - pobieranie listy wszystkich portfeli użytkownika.
-      - `[simulationId]/`
-        - `route.ts` - pobieranie pojedynczego portfela i danych podpiętej symulacji.
-        - `sync/route.ts` - automatyczna synchronizacja obecnych cen aktywów z giełdy przez Yahoo Finance API.
-        - `assets/`
-          - `route.ts` - dodawanie nowego aktywa do portfela.
-          - `[assetId]/route.ts` - edycja oraz usuwanie aktywa z portfela.
-    - `simulations/`
-      - `route.ts` - pobieranie listy oraz dodawanie nowej symulacji z limitem 3 na użytkownika.
-      - `[id]/route.ts` - pobieranie, aktualizacja (PUT) oraz usuwanie pojedynczej symulacji.
-    - `ticker/`
-      - `route.ts` - endpoint pobierający aktualne notowania cenowe i walutę pojedynczego instrumentu z Yahoo Finance.
-    - `user/`
-      - `avatar/route.ts` - upload avatara, walidacja pliku i zapis ścieżki w bazie danych.
-      - `email/route.ts` - zapis tymczasowego e-maila do ciasteczka na potrzeby weryfikacji.
+src/
+   components/                   Komponenty interfejsu pogrupowane według domen
+      auth/                        Obsługa akcji po logowaniu i rejestracji
+      calculator/                  Formularze, symulacja, wykresy i zapis wyników
+      dashboard/                   KPI, alerty, highlights i wykres alokacji
+      layout/                      Header, Footer i LoadingPage
+      notifications/              Provider oraz komunikaty Ant Design
+      portfolio/                   Aktywa, podsumowanie i rebalancing portfela
+      simulations/                 Lista, szczegóły i edycja symulacji
+      theme/                       Provider i przełącznik jasnego/ciemnego motywu
+   lib/
+      auth/                        Konfiguracja better-auth, sesja i akcje po auth
+      db/                          Klient administracyjny Supabase
+      dashboard/                   Typy i pomocnicze funkcje dashboardu
+      email/                       Resend i szablony wiadomości e-mail
+      portfolio/                   Typy DTO, kursy walut i obliczenia portfela
+      simulation/                  Typy, percentyle i drafty w localStorage
+      utils/                       Walidacja Zod i normalizacja błędów
 
-- `prisma/`
-  - `schema.prisma` - schemat bazy danych (modele auth, SavedSimulation, Portfolio, PortfolioAsset).
-  - `migrations/` - migracje bazy danych PostgreSQL.
+public/                          Statyczne assety aplikacji
+   logo.png                      Logo aplikacji
 
-- `public/`
-  - assety statyczne (logo, obrazy tła, ikony).
-  - `uploads/avatars/` - zapisane avatary użytkowników, pogrupowane po identyfikatorze konta.
+eslint.config.mjs                Konfiguracja ESLint
+global.d.ts                      Globalne deklaracje typów
+next-env.d.ts                    Typy generowane przez Next.js
+next.config.ts                  Konfiguracja Next.js i zewnętrznych obrazów
+postcss.config.mjs               Konfiguracja PostCSS/Tailwind
+netlify.toml                     Build i plugin Next.js dla Netlify
+package.json                     Zależności i skrypty npm
+tsconfig.json                    Konfiguracja TypeScript i aliasu @/*
+```
 
-- `src/`
-  - `components/`
-    - `auth/`
-      - `PostAuthHandler.tsx` - bezobsługowy komponent wyłapujący akcje z `localStorage` po logowaniu przez Google lub po weryfikacji e-maila.
-    - `calculator/`
-      - `Calculator.tsx` - główny interfejs kroków kalkulatora inwestycyjnego.
-      - `PortfolioMiniChart.tsx` - podgląd małego wykresu profilu portfela.
-      - `SaveSimulationModal.tsx` - modal nadawania nazwy i zapisu symulacji.
-      - `Simulation.tsx` - silnik i interfejs symulacji Monte Carlo.
-      - `SimulationComparisonChart.tsx` - wydajny wykres porównawczy symulacji i percentyli (Recharts + `React.memo`).
-      - `SimulationNominalTab.tsx` - zakładka z podsumowaniem symulacji i rekomendacją składki.
-      - `SimulationParametersForm.tsx` - formularz parametrów symulacji i alokacji portfela.
-    - `layout/`
-      - `Footer.tsx` - stopka aplikacji.
-      - `Header.tsx` - nawigacja aplikacji z motywem, bezpośrednim odnośnikiem do profilu i wylogowaniem.
-      - `LoadingPage.tsx` - pełnoekranowy spinner ładowania.
-    - `notifications/`
-      - `NotificationProvider.tsx` - kontekst notyfikacji Ant Design i hook `useNotify`.
-      - `Notify.tsx` - kompilat komunikatów klienckich.
-    - `portfolio/`
-      - `AssetFormModal.tsx` - modal dodawania i edycji aktywa z opcją pobierania ceny z giełdy.
-      - `PortfolioAssetsList.tsx` - lista instrumentów w portfelu.
-      - `PortfolioCard.tsx` - karta portfela w widoku listy z indykatorem statusu rebalancingu.
-      - `PortfolioDetails.tsx` - główny widok szczegółów portfela.
-      - `PortfolioRebalancing.tsx` - moduł wyliczania odchylenia alokacji i propozycji rebalancingu (Wariant A & B).
-      - `PortfoliosList.tsx` - lista wszystkich portfeli użytkownika.
-      - `PortfolioSummary.tsx` - podsumowanie wartości, zysku i alokacji portfela w PLN.
-    - `simulations/`
-      - `EditDiscardConfirmModal.tsx` - modal ostrzegający o odrzuceniu zmian w symulacji.
-      - `EditSaveConfirmModal.tsx` - modal potwierdzający aktualizację symulacji.
-      - `SimulationCard.tsx` - karta zapisanej symulacji na liście.
-      - `SimulationDetails.tsx` - podgląd zapisanej symulacji z wykresem percentyli.
-      - `SimulationEditor.tsx` - edytor symulacji z możliwością re-kalkulacji Monte Carlo.
-      - `SimulationsList.tsx` - lista zapisanych symulacji z licznikiem limitu.
-    - `theme/`
-      - `ThemeProvider.tsx` - provider motywu (localStorage, cookies, Ant Design tokeny).
-      - `ThemeToggle.tsx` - przełącznik motywu jasnego/ciemnego.
-  - `generated/prisma/` - wygenerowany klient bazy danych Prisma.
-  - `lib/`
-    - `auth/`
-      - `auth-client.ts` - klient `better-auth` z pluginem `nextCookies`.
-      - `auth.ts` - konfiguracja `better-auth` z adapterem Prisma i Google Providerem.
-      - `get-session.ts` - pobieranie i cache'owanie sesji po stronie serwera.
-      - `post-auth-actions.ts` - wywoływanie zapisów z `localStorage` po pomyślnej autoryzacji.
-    - `db/`
-      - `prisma.ts` - singleton klienta PrismaClient.
-    - `email/`
-      - `email.ts` - wysyłka e-maili weryfikacyjnych przez Resend.
-    - `portfolio/`
-      - `portfolio-types.ts` - typy DTO dla portfela i aktywów.
-      - `portfolio-utils.ts` - funkcje pomocnicze do przeliczania walut, formatowania kwot i matematyki rebalancingu.
-      - `use-fx-rates.ts` - hook do pobierania i cache'owania kursów NBP po stronie klienta.
-    - `simulation/`
-      - `extract-percentiles.ts` - algorytm wyciągania percentyli (P5, P25, P50, P75, P95) z serii danych.
-      - `pending-simulation.ts` - pomocnik do zarządzania drafatami symulacji w `localStorage`.
-      - `simulation-types.ts` - deklaracje typów dla symulacji.
-    - `utils/`
-      - `error-utils.ts` - normalizacja błędów do komunikatów PL.
-      - `validation.ts` - schematy walidacyjne Zod.
+Dane aplikacji są przechowywane w tabelach Supabase, a avatary w Supabase Storage. Schemat bazy i konfiguracja środowiska nie są przechowywane w repozytorium.
+
+## Generowanie md dla NotebookLM
+
+```bash
+npx repomix --style markdown --ignore "node_modules/**,.next/**,package-lock.json,public/**,*.png,*.jpg,*.svg,*.ico"
+```

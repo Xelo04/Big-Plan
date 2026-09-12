@@ -204,11 +204,23 @@ export default function SimulationParametersForm({
               }}
             />
 
-            <p className="text-xs mt-4 text-(--muted)">
-              {hasPendingChanges
-                ? "Masz nowe ustawienia. Kliknij przycisk, aby uruchomić symulację na nowych danych."
-                : "Wykres pokazuje wynik dla aktualnych ustawień."}
-            </p>
+            <div className="mt-4 pt-3 border-t border-(--btn-border)/50">
+              <p className="text-xs text-(--muted) mb-2">
+                {hasPendingChanges
+                  ? "Masz nowe ustawienia. Kliknij przycisk, aby uruchomić symulację na nowych danych."
+                  : "Wykres pokazuje wynik dla aktualnych ustawień."}
+              </p>
+              <p className="text-[11px] text-(--muted) leading-normal opacity-80">
+                Kalkulacja wykonana na podstawie wyników historycznych. Akcje
+                odnoszą się do wartości indeksu S&P 500 (uwzględniając
+                dywidendy) w latach 1928-2025 skorygowanych o inflację.
+                Obligacje odnoszą się do wartości obligacji US Treasury Bond
+                (10-year) w latach 1928-2025 skorygowanych o inflację. Przeszłe
+                wyniki nie gwarantują podobnych wyników w przyszłości.
+                Inwestowanie wiąże się z ryzykiem utraty całości lub części
+                kapitału. To nie jest porada inwestycyjna.
+              </p>
+            </div>
           </div>
 
           {/* Prawa strona: wykres kołowy */}

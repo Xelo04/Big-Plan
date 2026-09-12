@@ -11,6 +11,8 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
+import { InfoCircleOutlined } from "@ant-design/icons";
+import { Tooltip } from "antd";
 import type { PercentilePoint } from "@/src/lib/simulation/simulation-types";
 
 type ChartPoint = {
@@ -232,10 +234,25 @@ const SimulationComparisonChart = memo(function SimulationComparisonChart({
 
   return (
     <div className="rounded-lg border border-(--btn-border) p-4">
-      <p className="font-semibold mb-3">Porównanie wszystkich symulacji</p>
-      <p className="text-xs text-(--muted) mb-2">
-        Linie percentylowe: P5, P25, P50, P75 i P95.
-      </p>
+      <div className="flex items-center justify-between mb-3 pr-6">
+        <div className="flex flex-col gap-0.5">
+          <p className="font-semibold text-(--text)">
+            Porównanie wszystkich symulacji
+          </p>
+          <p className="text-xs text-(--muted)">
+            Linie percentylowe: P5, P25, P50, P75 i P95.
+          </p>
+        </div>
+        <Tooltip
+          title="Kalkulacja wykonana na podstawie wyników historycznych. Akcje odnoszą się do wartości indeksu S&P 500 (uwzględniając dywidendy) w latach 1928-2025 skorygowanych o inflację. Obligacje odnoszą się do wartości obligacji US Treasury Bond (10-year) w latach 1928-2025 skorygowanych o inflację. Przeszłe wyniki nie gwarantują podobnych wyników w przyszłości. Inwestowanie wiąże się z ryzykiem utraty całości lub części kapitału. To nie jest porada inwestycyjna."
+          styles={{ root: { maxWidth: 360, fontSize: 12 } }}
+        >
+          <InfoCircleOutlined
+            className="cursor-pointer text-(--muted) hover:text-(--text) transition-colors"
+            style={{ fontSize: 26 }}
+          />
+        </Tooltip>
+      </div>
       <div className="h-80 w-full" style={{ position: "relative" }}>
         <ResponsiveContainer
           width="100%"
