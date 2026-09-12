@@ -164,7 +164,7 @@ export default function SignUpPage() {
                 wysłać wiadomość z prośbą o aktywację na adres:
               </p>
               <div className="font-mono bg-black/20 p-1.5 rounded text-center text-blue-400 font-semibold mb-2 select-all">
-                bigplan@gmail.com
+                kontakt.bigplan@gmail.com
               </div>
               <p className="text-(--muted)">
                 <strong>Zachęcamy do rejestracji przez konto Google</strong> –
