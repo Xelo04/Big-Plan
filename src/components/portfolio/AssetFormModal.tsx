@@ -163,7 +163,13 @@ export default function AssetFormModal({
       cancelText="Anuluj"
       okButtonProps={{ disabled: !canSubmit, loading }}
       destroyOnHidden
-      width={560}
+      width="min(560px, calc(100vw - 24px))"
+      styles={{
+        body: {
+          maxHeight: "calc(100vh - 180px)",
+          overflowY: "auto",
+        },
+      }}
     >
       <div className="flex flex-col gap-4 py-2">
         <div className="flex flex-col gap-4 py-2">
@@ -172,7 +178,7 @@ export default function AssetFormModal({
             <label className="block text-sm font-medium text-(--text) mb-1.5">
               Ticker (opcjonalnie)
             </label>
-            <div className="flex gap-2">
+            <div className="flex min-w-0 gap-2">
               <Input
                 placeholder="np. AAPL, VOO"
                 maxLength={20}
@@ -181,6 +187,7 @@ export default function AssetFormModal({
                   setForm({ ...form, ticker: e.target.value.toUpperCase() })
                 }
                 size="large"
+                className="min-w-0 flex-1"
                 onPressEnter={handleFetchTicker}
               />
               <Button
@@ -188,6 +195,7 @@ export default function AssetFormModal({
                 loading={fetchingTicker}
                 icon={<SearchOutlined />}
                 size="large"
+                className="shrink-0"
                 title="Pobierz cenę z giełdy"
               />
             </div>
@@ -212,7 +220,7 @@ export default function AssetFormModal({
           </div>
 
           {/* 3. Kategoria + Ilość */}
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <div>
               <label className="block text-sm font-medium text-(--text) mb-1.5">
                 Kategoria <span className="text-red-500">*</span>
@@ -246,7 +254,7 @@ export default function AssetFormModal({
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           <div>
             <label className="block text-sm font-medium text-(--text) mb-1.5">
               Cena zakupu jednostki <span className="text-red-500">*</span>
@@ -278,7 +286,7 @@ export default function AssetFormModal({
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           <div>
             <label className="block text-sm font-medium text-(--text) mb-1.5">
               Waluta <span className="text-red-500">*</span>

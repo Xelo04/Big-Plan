@@ -62,13 +62,13 @@ export default function ProfilePicture({ user }: { user: User }) {
     <>
       <div
         style={{
-          width: 260,
           display: "flex",
           flexDirection: "column",
           alignItems: "center",
           alignSelf: "center",
           gap: 30,
         }}
+        className="w-full shrink-0 sm:w-65"
       >
         <div
           style={{
@@ -112,7 +112,7 @@ export default function ProfilePicture({ user }: { user: User }) {
         </div>
 
         <div
-          style={{ width: "100%", display: "flex", justifyContent: "center" }}
+          className="flex w-full justify-center"
         >
           <Button
             type="primary"

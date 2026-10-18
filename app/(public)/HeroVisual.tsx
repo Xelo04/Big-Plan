@@ -24,7 +24,7 @@ export default function HeroVisual() {
 
   return (
     <div
-      className="relative w-full h-120 md:h-137.5 flex items-center justify-center select-none"
+      className="relative flex h-85 w-full select-none items-center justify-center sm:h-100 md:h-137.5"
       style={{ perspective: "1200px" }}
     >
       {/* Centralna poświata w tle */}
@@ -32,7 +32,7 @@ export default function HeroVisual() {
 
       {/* Kontener 3D reagujący na ruch myszki */}
       <div
-        className="relative w-full max-w-115 h-95 transition-transform duration-200 ease-out"
+        className="relative h-72 w-[calc(100%-1rem)] max-w-115 transition-transform duration-200 ease-out sm:h-95 sm:w-full"
         style={{
           transform: `rotateY(${mousePos.x * 12}deg) rotateX(${-mousePos.y * 12}deg)`,
           transformStyle: "preserve-3d",
@@ -40,7 +40,7 @@ export default function HeroVisual() {
       >
         {/* KARTA 1: Główny Wykres Monte Carlo          */}
         <div
-          className="absolute inset-x-2 top-8 rounded-3xl border border-(--btn-border) p-6 backdrop-blur-xl bg-(--card-background) shadow-2xl"
+          className="absolute inset-x-1 top-4 rounded-2xl border border-(--btn-border) bg-(--card-background) p-4 shadow-2xl backdrop-blur-xl sm:inset-x-2 sm:top-8 sm:rounded-3xl sm:p-6"
           style={{
             transform: "translateZ(40px)",
             boxShadow: "0 30px 60px -15px rgba(0,0,0,0.2)",
@@ -66,7 +66,7 @@ export default function HeroVisual() {
           </div>
 
           {/* Symulowany Wykres Fali */}
-          <div className="h-32 w-full relative flex items-end pt-2">
+          <div className="relative flex h-24 w-full items-end pt-2 sm:h-32">
             <svg
               className="w-full h-full overflow-visible"
               viewBox="0 0 300 100"
@@ -120,7 +120,7 @@ export default function HeroVisual() {
 
         {/* KARTA 2: Wskaźnik skuteczności planu    */}
         <div
-          className="absolute -right-6 -top-4 rounded-2xl border border-(--btn-border) p-4 backdrop-blur-xl bg-(--card-background) shadow-xl flex items-center gap-3"
+          className="absolute -right-2 -top-3 flex items-center gap-2 rounded-2xl border border-(--btn-border) bg-(--card-background) p-2.5 shadow-xl backdrop-blur-xl sm:-right-6 sm:-top-4 sm:gap-3 sm:p-4"
           style={{
             transform: "translateZ(80px)",
           }}
@@ -130,7 +130,7 @@ export default function HeroVisual() {
           </div>
           <div>
             <p className="text-[10px] uppercase tracking-wider text-(--muted)">
-              Skuteczność Planu
+              PRAWDOPODOBIEŃSTWO SUKCESU:
             </p>
             <p className="text-sm font-bold text-(--text) mt-0.5">90.4%</p>
           </div>
@@ -138,7 +138,7 @@ export default function HeroVisual() {
 
         {/* KARTA 3: Alokacja Portfela */}
         <div
-          className="absolute -left-8 bottom-6 rounded-2xl border border-(--btn-border) p-4 backdrop-blur-xl bg-(--card-background) shadow-xl flex items-center gap-4"
+          className="absolute -bottom-1 -left-2 flex items-center gap-2 rounded-2xl border border-(--btn-border) bg-(--card-background) p-2.5 shadow-xl backdrop-blur-xl sm:-bottom-0 sm:-left-8 sm:gap-4 sm:p-4"
           style={{
             transform: "translateZ(100px)",
           }}

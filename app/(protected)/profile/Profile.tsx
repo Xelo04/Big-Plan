@@ -22,14 +22,13 @@ export default function Profile({ user }: { user: User }) {
 
   return (
     <main
-      className="flex w-full items-center justify-center p-6 gap-12 flex-col"
+      className="flex w-full items-center justify-center gap-6 p-3 sm:gap-12 sm:p-6"
       style={{ color: "var(--text)" }}
     >
-      <section style={{ width: "min(900px, 96vw)" }}>
+      <section className="w-full max-w-225">
         <Card
           style={{
             borderRadius: 12,
-            padding: 20,
             background: "var(--card-background, var(--bg))",
             boxShadow: "var(--card-shadow, 0 10px 30px rgba(2,6,23,0.06))",
             border: "var(--card-border, 1px solid rgba(0,0,0,0.06))",
@@ -37,15 +36,12 @@ export default function Profile({ user }: { user: User }) {
             backdropFilter: "var(--card-backdrop-filter, none)",
           }}
         >
-          <div style={{ display: "flex", gap: 24, alignItems: "flex-start" }}>
+          <div className="flex flex-col gap-6 sm:flex-row sm:gap-6">
             <ProfilePicture user={user} />
 
-            <div style={{ flex: 1 }}>
+            <div className="min-w-0 flex-1">
               <div
                 style={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "center",
                   marginBottom: 8,
                 }}
               >
@@ -59,11 +55,7 @@ export default function Profile({ user }: { user: User }) {
               <Divider style={{ margin: "12px 0 18px" }} />
 
               <div
-                style={{
-                  display: "grid",
-                  gridTemplateColumns: "1fr 1fr",
-                  gap: 18,
-                }}
+                className="grid grid-cols-1 gap-5 sm:grid-cols-2"
               >
                 <div>
                   <div
@@ -84,6 +76,7 @@ export default function Profile({ user }: { user: User }) {
                       fontWeight: 700,
                       color: "var(--text)",
                       fontSize: 16,
+                      overflowWrap: "anywhere",
                     }}
                   >
                     {user.name}
@@ -112,6 +105,7 @@ export default function Profile({ user }: { user: User }) {
                         fontWeight: 700,
                         color: "var(--text)",
                         fontSize: 16,
+                        overflowWrap: "anywhere",
                       }}
                     >
                       {user.email}
@@ -179,14 +173,14 @@ export default function Profile({ user }: { user: User }) {
               <Divider style={{ margin: "24px 0 18px" }} />
 
               {/* Dół karty z akcjami */}
-              <div className="flex flex-wrap items-center justify-between gap-4">
+              <div className="flex flex-col items-stretch gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between sm:gap-4">
                 <Button
                   type="default"
                   size="large"
                   icon={<KeyOutlined />}
                   onClick={() => setPasswordModalOpen(true)}
                 >
-                  Zmień hasło
+                  <span className="whitespace-normal">Zmień hasło</span>
                 </Button>
 
                 <SignOutEverywhereButton />

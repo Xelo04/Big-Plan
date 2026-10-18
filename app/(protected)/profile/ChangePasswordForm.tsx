@@ -66,7 +66,7 @@ export default function ChangePasswordForm({
       onCancel={onCancel}
       footer={null}
       destroyOnHidden
-      width={480}
+      width="min(480px, calc(100vw - 32px))"
     >
       <Form
         form={form}
@@ -115,7 +115,7 @@ export default function ChangePasswordForm({
           />
         </Form.Item>
 
-        <div className="flex justify-end gap-2 mt-6">
+        <div className="flex flex-col-reverse justify-end gap-2 mt-6 sm:flex-row">
           <Button onClick={onCancel} size="large">
             Anuluj
           </Button>

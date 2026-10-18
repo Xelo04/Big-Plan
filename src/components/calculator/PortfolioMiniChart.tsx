@@ -32,11 +32,11 @@ export default function PortfolioMiniChart({
     }).format(Math.round(value));
 
   return (
-    <div className="h-40 w-full rounded-lg bg-[color-mix(in_srgb,var(--bg)_92%,white_8%)] p-2">
+    <div className="h-32 w-full min-w-0 rounded-lg bg-[color-mix(in_srgb,var(--bg)_92%,white_8%)] p-1.5 sm:h-40 sm:p-2">
       <ResponsiveContainer width="100%" height="100%">
         <LineChart
           data={data}
-          margin={{ top: 14, right: 26, left: 6, bottom: 2 }}
+          margin={{ top: 10, right: 8, left: 0, bottom: 2 }}
         >
           <CartesianGrid
             strokeDasharray="3 3"
@@ -44,17 +44,17 @@ export default function PortfolioMiniChart({
           />
           <XAxis
             dataKey="label"
-            tick={{ fontSize: 12, fill: "var(--text)" }}
+            tick={{ fontSize: 10, fill: "var(--text)" }}
             tickLine={{ stroke: "rgba(148,163,184,0.65)" }}
             axisLine={{ stroke: "rgba(148,163,184,0.65)" }}
           />
           <YAxis
             tickFormatter={(value) => formatValue(Number(value))}
-            tick={{ fontSize: 12, fill: "var(--text)" }}
+            tick={{ fontSize: 10, fill: "var(--text)" }}
             tickLine={{ stroke: "rgba(148,163,184,0.65)" }}
             axisLine={{ stroke: "rgba(148,163,184,0.65)" }}
             tickMargin={8}
-            width={58}
+            width={44}
             allowDecimals={false}
             tickCount={4}
             domain={[0, yMax ?? "auto"]}

@@ -265,19 +265,19 @@ export default function Calculator() {
   };
 
   return (
-    <div className="mx-10 p-6 flex-1 flex flex-col min-h-0">
-      <div className="w-full max-w-3xl mx-auto mb-6">
-        <Steps current={current} items={stepsItems} />
+    <div className="flex min-h-0 flex-1 flex-col px-3 py-4 sm:px-6 md:px-10">
+      <div className="mx-auto mb-5 w-full max-w-3xl overflow-x-auto sm:mb-6">
+        <Steps current={current} items={stepsItems} responsive />
       </div>
 
-      <div className="flex-1 flex items-center justify-center min-h-0">
+      <div className="flex min-h-0 flex-1 items-start justify-center">
         {/* --- KROK 0 --- */}
         {current === 0 && (
           <div className="w-full max-w-5xl">
-            <div className="grid grid-cols-2 gap-5">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5">
               <button
                 type="button"
-                className="w-full min-h-56 cursor-pointer rounded-md border border-(--btn-border) p-7 text-left transition-colors duration-200 hover:border-(--cta-from) focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--accent)/30"
+                className="min-h-44 w-full cursor-pointer rounded-md border border-(--btn-border) p-5 text-left transition-colors duration-200 hover:border-(--cta-from) focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--accent)/30 sm:min-h-56 sm:p-7"
                 style={{
                   background: "var(--card-background)",
                   boxShadow: "var(--card-shadow)",
@@ -301,7 +301,7 @@ export default function Calculator() {
 
               <button
                 type="button"
-                className="w-full min-h-56 cursor-pointer rounded-md border border-(--btn-border) p-7 text-left transition-colors duration-200 hover:border-(--cta-from) focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--accent)/30"
+                className="min-h-44 w-full cursor-pointer rounded-md border border-(--btn-border) p-5 text-left transition-colors duration-200 hover:border-(--cta-from) focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--accent)/30 sm:min-h-56 sm:p-7"
                 style={{
                   background: "var(--card-background)",
                   boxShadow: "var(--card-shadow)",
@@ -328,7 +328,7 @@ export default function Calculator() {
 
         {/* --- KROK 1 --- */}
         {current === 1 && (
-          <Card title="Podaj dane osobowe" className="w-full max-w-4xl">
+          <Card title="Podaj dane osobowe" className="w-full max-w-4xl" styles={{ body: { padding: "clamp(16px, 4vw, 24px)" } }}>
             {/* Info o wartości pieniądza */}
             <div
               className="mb-5 rounded-lg border p-3 flex items-start gap-2"
@@ -692,6 +692,7 @@ export default function Calculator() {
           <Card
             title="Wybierz profil portfela"
             className="w-full max-w-5xl"
+            styles={{ body: { padding: "clamp(12px, 3vw, 24px)" } }}
             extra={
               <Tooltip
                 title="Przedstawione poniżej wykresy są poglądowe i mają charakter informacyjny."
@@ -711,7 +712,7 @@ export default function Calculator() {
               <Card
                 hoverable
                 className={`w-full cursor-pointer border border-(--btn-border) ${portfolio === "defensive" ? "border-2 border-(--accent)" : ""}`}
-                styles={{ body: { padding: 24 } }}
+                styles={{ body: { padding: "clamp(14px, 3vw, 24px)" } }}
                 onClick={() => {
                   setPortfolio("defensive");
                   setStartingMonthlyPayment(
@@ -744,7 +745,7 @@ export default function Calculator() {
               <Card
                 hoverable
                 className={`w-full cursor-pointer border border-(--btn-border) ${portfolio === "aggressive" ? "border-2 border-(--accent)" : ""}`}
-                styles={{ body: { padding: 24 } }}
+                styles={{ body: { padding: "clamp(14px, 3vw, 24px)" } }}
                 onClick={() => {
                   setPortfolio("aggressive");
                   setStartingMonthlyPayment(
@@ -777,7 +778,7 @@ export default function Calculator() {
               <Card
                 hoverable
                 className={`w-full cursor-pointer border border-(--btn-border) ${portfolio === "allStocks" ? "border-2 border-(--accent)" : ""}`}
-                styles={{ body: { padding: 24 } }}
+                styles={{ body: { padding: "clamp(14px, 3vw, 24px)" } }}
                 onClick={() => {
                   setPortfolio("allStocks");
                   setStartingMonthlyPayment(
@@ -814,9 +815,12 @@ export default function Calculator() {
 
         {/* --- KROK 3 --- */}
         {current === 3 && (
-          <Card className="w-full">
+          <Card
+            className="w-full min-w-0"
+            styles={{ body: { padding: "clamp(12px, 3vw, 24px)" } }}
+          >
             <div className="flex flex-col gap-1">
-              <div className="flex justify-between items-center">
+              <div className="flex flex-wrap items-center justify-between gap-3">
                 {!simIsLoading ? (
                   <Button onClick={prev}>Wstecz</Button>
                 ) : (

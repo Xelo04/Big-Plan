@@ -687,18 +687,18 @@ export default function Simulation({
   return (
     <div className="w-full">
       {isLoading ? (
-        <div className="mt-6 rounded-2xl border border-(--btn-border) overflow-hidden bg-[radial-gradient(circle_at_18%_18%,rgba(14,165,164,0.14),transparent_42%),radial-gradient(circle_at_82%_8%,rgba(249,115,22,0.12),transparent_38%),linear-gradient(135deg,var(--card),var(--bg))] pointer-events-none">
-          <div className="p-6 md:p-8">
-            <div className="flex items-center justify-between gap-4 mb-3">
+        <div className="pointer-events-none mt-6 overflow-hidden rounded-2xl border border-(--btn-border) bg-[radial-gradient(circle_at_18%_18%,rgba(14,165,164,0.14),transparent_42%),radial-gradient(circle_at_82%_8%,rgba(249,115,22,0.12),transparent_38%),linear-gradient(135deg,var(--card),var(--bg))]">
+          <div className="p-4 sm:p-6 md:p-8">
+            <div className="mb-3 flex items-start justify-between gap-3">
               <div>
                 <p className="text-xs uppercase tracking-[0.18em] text-(--muted)">
                   Symulacja Monte Carlo
                 </p>
-                <h3 className="text-xl md:text-2xl font-semibold mt-1">
+                <h3 className="mt-1 text-lg font-semibold sm:text-xl md:text-2xl">
                   Liczymy prognozy dla Twojego portfela
                 </h3>
               </div>
-              <div className="h-11 w-11 rounded-full border-2 border-(--btn-border) border-t-(--accent) animate-spin" />
+              <div className="hidden h-11 w-11 rounded-full border-2 border-(--btn-border) border-t-(--accent) animate-spin sm:block" />
             </div>
 
             <div className="mt-0">
@@ -720,7 +720,9 @@ export default function Simulation({
         </div>
       ) : results.length > 0 ? (
         <div className="mt-6">
-          <Tabs items={tabItems} />
+          <div className="min-w-0 overflow-hidden">
+            <Tabs items={tabItems} />
+          </div>
 
           <SimulationParametersForm
             inputs={draftInputs}

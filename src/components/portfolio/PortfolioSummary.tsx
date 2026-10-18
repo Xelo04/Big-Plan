@@ -46,12 +46,12 @@ export default function PortfolioSummary({
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
       {/* 1. Kafel: Wartość portfela */}
-      <div className="rounded-2xl border border-(--btn-border) p-5 bg-[linear-gradient(135deg,rgba(14,165,164,0.09),rgba(249,115,22,0.07))]">
+      <div className="rounded-2xl border border-(--btn-border) bg-[linear-gradient(135deg,rgba(14,165,164,0.09),rgba(249,115,22,0.07))] p-4 sm:p-5">
         <p className="text-xs uppercase tracking-[0.16em] text-(--muted)">
           Wartość portfela
         </p>
-        <div className="mt-2 flex items-baseline gap-2">
-          <p className="text-3xl md:text-4xl font-semibold text-(--text) leading-none">
+        <div className="mt-2 flex flex-wrap items-baseline gap-2">
+          <p className="text-3xl font-semibold leading-none text-(--text) sm:text-4xl">
             {formatAmount(stats.totalValue)}
           </p>
           <p className="text-base text-(--muted)">PLN</p>
@@ -78,7 +78,7 @@ export default function PortfolioSummary({
       </div>
 
       {/* 2. Kafel: Alokacja (Tekst + Wykres Kołowy) */}
-      <div className="rounded-2xl border border-(--btn-border) p-5 bg-black/5 dark:bg-white/5 flex flex-col sm:flex-row gap-6 items-center">
+      <div className="flex flex-col items-center gap-4 rounded-2xl border border-(--btn-border) bg-black/5 p-4 dark:bg-white/5 sm:flex-row sm:gap-6 sm:p-5">
         {/* Lewa strona: Teksty */}
         <div className="flex-1 w-full">
           <p className="text-xs uppercase tracking-[0.16em] text-(--muted) mb-4">
@@ -106,7 +106,7 @@ export default function PortfolioSummary({
         </div>
 
         {/* Prawa strona: Wykres Kołowy Donut */}
-        <div className="w-full sm:w-35 h-35 relative flex shrink-0 items-center justify-center">
+        <div className="relative hidden h-28 w-28 shrink-0 items-center justify-center sm:flex sm:h-35 sm:w-35">
           {noData ? (
             <span className="text-xs text-(--muted)">Brak aktywów</span>
           ) : (

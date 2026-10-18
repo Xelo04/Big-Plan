@@ -41,7 +41,7 @@ export default function SimulationParametersForm({
   ];
 
   return (
-    <div className="mt-6 rounded-lg border border-(--btn-border) p-4">
+    <div className="mt-6 min-w-0 rounded-lg border border-(--btn-border) p-3 sm:p-4">
       <p className="text-sm font-semibold mb-3">Parametry symulacji</p>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-4">
@@ -159,7 +159,7 @@ export default function SimulationParametersForm({
         <div className="grid grid-cols-1 md:grid-cols-[1fr_180px] gap-6 items-center">
           {/* Lewa strona: legendy i slider */}
           <div>
-            <div className="flex items-center justify-between text-sm mb-3">
+            <div className="flex flex-wrap items-center justify-between gap-2 text-sm mb-3">
               <div className="inline-flex items-center gap-2">
                 <span
                   className="inline-block w-3 h-3 rounded-sm"
@@ -224,7 +224,7 @@ export default function SimulationParametersForm({
           </div>
 
           {/* Prawa strona: wykres kołowy */}
-          <div className="w-full h-40 flex items-center justify-center">
+          <div className="mx-auto hidden h-32 w-full max-w-52 sm:h-40 md:block">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
                 <Pie

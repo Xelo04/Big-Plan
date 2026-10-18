@@ -37,8 +37,8 @@ export default function PortfolioCard({
 
   // Konfiguracja kropki statusu
   const statusConfig = {
-    CRITICAL: { color: "#ef4444", text: "Krytyczny rebalancing (>10%)" },
-    WARNING: { color: "#f59e0b", text: "Wymagany rebalancing (>5%)" },
+    CRITICAL: { color: "#ef4444", text: "Wykryto znaczne odchylenie alokacji!" },
+    WARNING: { color: "#f59e0b", text: "Przekroczono próg odchylenia (5%)" },
     OK: { color: "#10b981", text: "Alokacja w normie" },
   };
   const currentStatus = statusConfig[stats.rebalanceStatus];

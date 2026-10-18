@@ -35,15 +35,15 @@ export default function PortfolioRebalancing({
       icon: (
         <ExclamationCircleFilled style={{ color: "#ef4444", fontSize: 28 }} />
       ),
-      title: "Krytyczny rebalancing",
-      desc: "Twój portfel odchylił się od celu o ponad 10%. Zdecydowanie zalecamy podjęcie kroków wyrównujących proporcje.",
+      title: "Wykryto znaczne odchylenie alokacji!",
+      desc: "Poziom odchylenia od przyjętej alokacji przekroczył 10%. Zobacz przykładowe scenariusze wyrównania proporcji.",
     },
     WARNING: {
       color: "#f59e0b",
       icon: (
         <ExclamationCircleFilled style={{ color: "#f59e0b", fontSize: 28 }} />
       ),
-      title: "Wymagany rebalancing",
+      title: "Przekroczono próg odchylenia (5%)",
       desc: "Twój portfel odchylił się od celu o ponad 5%. Poniżej znajdziesz kroki, jak przywrócić odpowiednie proporcje.",
     },
     OK: {
@@ -56,14 +56,14 @@ export default function PortfolioRebalancing({
 
   const currentStatus = statusConfig[rebalanceStatus];
 
-  // Wariant A: Przesunięcie (Kupno / Sprzedaż)
+  // Wariant A: Przesunięcie kapitału
   const targetStocksValue = totalValue * (targetStocksPct / 100);
   const targetBondsValue = totalValue * (targetBondsPct / 100);
 
   const stocksAction = targetStocksValue - stats.stocksValue;
   const bondsAction = targetBondsValue - stats.bondsValue;
 
-  // Wariant B: Tylko dopłata gotówki (żeby wyrównać do niedoważonego aktywa)
+  // Wariant B: Sama dopłata
   const variantB = { amount: 0, assetToBuy: "", possible: true };
 
   if (stocksDeviation > 0) {
@@ -106,32 +106,35 @@ export default function PortfolioRebalancing({
           {/* Wariant A */}
           <div className="rounded-xl border border-(--btn-border) p-5 bg-(--bg)">
             <p className="text-xs uppercase tracking-[0.14em] text-(--muted) mb-2">
-              Wariant A: Sprzedaj i kup
+              WARIANT A: PRZESUNIĘCIE KAPITAŁU
             </p>
             <p className="text-sm text-(--text) mb-4">
-              Zbilansuj portfel przesuwając obecny kapitał (uwaga na ew. koszty
-              i podatki).
+              Dostosuj alokację portfela przesuwając obecny kapitał (uwaga na
+              ewentualne koszty i podatki).
             </p>
             <ul className="text-sm font-medium space-y-2">
               {stocksAction < 0 && (
                 <li className="text-red-500">
-                  ↓ Sprzedaj Akcje za {formatAmount(Math.abs(stocksAction))} PLN
+                  ↓ Redukcja pozycji Akcje za{" "}
+                  {formatAmount(Math.abs(stocksAction))} PLN
                 </li>
               )}
               {stocksAction > 0 && (
                 <li className="text-emerald-500">
-                  ↑ Kup Akcje za {formatAmount(stocksAction)} PLN
+                  ↑ Zwiększenie pozycji Akcje za {formatAmount(stocksAction)}{" "}
+                  PLN
                 </li>
               )}
               {bondsAction < 0 && (
                 <li className="text-red-500">
-                  ↓ Sprzedaj Obligacje za {formatAmount(Math.abs(bondsAction))}{" "}
-                  PLN
+                  ↓ Redukcja pozycji Obligacje za{" "}
+                  {formatAmount(Math.abs(bondsAction))} PLN
                 </li>
               )}
               {bondsAction > 0 && (
                 <li className="text-emerald-500">
-                  ↑ Kup Obligacje za {formatAmount(bondsAction)} PLN
+                  ↑ Zwiększenie pozycji Obligacje za {formatAmount(bondsAction)}{" "}
+                  PLN
                 </li>
               )}
             </ul>
@@ -140,23 +143,23 @@ export default function PortfolioRebalancing({
           {/* Wariant B */}
           <div className="rounded-xl border border-(--btn-border) p-5 bg-[linear-gradient(135deg,rgba(59,130,246,0.10),rgba(14,165,164,0.08))]">
             <p className="text-xs uppercase tracking-[0.14em] text-(--muted) mb-2">
-              Wariant B: Sama dopłata
+              WARIANT B: SAMA DOPŁATA
             </p>
             {variantB.possible ? (
               <>
                 <p className="text-sm text-(--text) mb-4">
-                  Wyrównaj proporcje dopłacając nowe środki bez konieczności
-                  sprzedaży czegokolwiek.
+                  Wyrównaj proporcje dopłacając nowe środki.
                 </p>
                 <div className="text-sm font-medium text-blue-600 dark:text-blue-400">
-                  Wpłać <strong>{formatAmount(variantB.amount)} PLN</strong> i
-                  za całą kwotę kup <strong>{variantB.assetToBuy}</strong>.
+                  Zwiększenie pozycji <strong>{variantB.assetToBuy}</strong> za{" "}
+                  <strong>{formatAmount(variantB.amount)} PLN</strong>
                 </div>
               </>
             ) : (
               <p className="text-sm text-(--text)">
                 Wariant niedostępny, ponieważ docelowa waga przerośniętego
-                aktywa to 0%. Musisz je sprzedać.
+                aktywa to 0%. W takiej sytuacji sama dopłata nowych środków
+                nie pozwoli osiągnąć założonych proporcji.
               </p>
             )}
           </div>

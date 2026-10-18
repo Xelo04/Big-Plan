@@ -3,7 +3,7 @@ import { z } from "zod";
 import { getSession } from "@/src/lib/auth/get-session";
 import { getSupabaseAdmin, newId } from "@/src/lib/db/supabase";
 
-const MAX_SIMULATIONS_PER_USER = 3;
+const MAX_SIMULATIONS_PER_USER = 1;
 const MAX_NAME_LENGTH = 80;
 
 const percentilePointSchema = z.object({

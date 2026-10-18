@@ -28,7 +28,7 @@ export default function DashboardAlerts({ needsRebalancing }: Props) {
         />
         <div>
           <p className="font-semibold text-(--text)">
-            Wymagany rebalancing portfela
+            Przekroczono próg odchylenia (5%)
           </p>
           <p className="text-sm text-(--muted) mt-1">
             <span className="font-medium text-(--text)">{first.name}</span>{" "}

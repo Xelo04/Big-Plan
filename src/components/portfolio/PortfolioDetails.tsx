@@ -202,7 +202,7 @@ export default function PortfolioDetails({
 
   if (!simulationInfo) {
     return (
-      <div className="w-full max-w-5xl mx-auto p-6">
+      <div className="mx-auto w-full max-w-5xl px-3 py-4 sm:p-6">
         <Button
           icon={<ArrowLeftOutlined />}
           onClick={() => router.push("/my-portfolios")}
@@ -240,7 +240,7 @@ export default function PortfolioDetails({
   const isEmpty = assets.length === 0;
 
   return (
-    <div className="w-full max-w-5xl mx-auto p-6">
+    <div className="mx-auto w-full max-w-5xl min-w-0 px-3 py-4 sm:p-6">
       {modalContextHolder}
 
       {/* --- Top bar --- */}
@@ -255,11 +255,14 @@ export default function PortfolioDetails({
       </div>
 
       {/* --- Główny kontener --- */}
-      <Card className="w-full">
+      <Card
+        className="w-full min-w-0"
+        styles={{ body: { padding: "clamp(12px, 3vw, 24px)" } }}
+      >
         <div className="flex flex-col gap-6">
-          <div className="flex flex-col sm:flex-row justify-between sm:items-start gap-4 pb-2 border-b border-(--btn-border)">
-            <div>
-              <h1 className="text-2xl md:text-3xl font-semibold text-(--text)">
+          <div className="flex flex-col gap-3 border-b border-(--btn-border) pb-3 sm:flex-row sm:items-start sm:justify-between">
+            <div className="min-w-0">
+              <h1 className="break-words text-2xl font-semibold text-(--text) sm:text-3xl">
                 Portfel: {simulationInfo.name}
               </h1>
               <p className="text-sm text-(--muted) mt-1">
@@ -292,7 +295,7 @@ export default function PortfolioDetails({
                 size="large"
                 onClick={() => setFormOpen(true)}
               >
-                Dodaj pierwsze aktywo
+                  Dodaj pierwsze aktywo
               </Button>
             </div>
           ) : (
@@ -315,7 +318,7 @@ export default function PortfolioDetails({
                 targetBondsPct={simulationInfo.bondsPct}
               />
 
-              <div className="flex justify-between items-center mt-2 border-t border-(--btn-border) pt-6">
+              <div className="mt-2 flex flex-col items-stretch justify-between gap-3 border-t border-(--btn-border) pt-5 sm:flex-row sm:items-center">
                 <h3 className="text-lg font-semibold text-(--text)">
                   Lista aktywów
                 </h3>
@@ -326,6 +329,7 @@ export default function PortfolioDetails({
                     setEditingAsset(null);
                     setFormOpen(true);
                   }}
+                  className="w-full sm:w-auto"
                 >
                   Dodaj aktywo
                 </Button>

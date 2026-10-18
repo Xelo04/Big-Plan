@@ -19,7 +19,7 @@ export default function PortfoliosList({ initialItems }: PortfoliosListProps) {
 
   if (items.length === 0) {
     return (
-      <div className="w-full max-w-4xl mx-auto p-6">
+      <div className="mx-auto w-full max-w-4xl px-3 py-4 sm:p-6">
         <h1 className="text-2xl font-semibold text-(--text) mb-6">
           Moje portfele
         </h1>
@@ -60,7 +60,7 @@ export default function PortfoliosList({ initialItems }: PortfoliosListProps) {
   }
 
   return (
-    <div className="w-full max-w-4xl mx-auto p-6">
+    <div className="mx-auto w-full max-w-4xl px-3 py-4 sm:p-6">
       <h1 className="text-2xl md:text-3xl font-semibold text-(--text) mb-2">
         Moje portfele
       </h1>

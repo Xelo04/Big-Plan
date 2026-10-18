@@ -509,7 +509,7 @@ export default function SimulationEditor({
       />
 
       {calibratedMonthlyPayment != null && simulationSuccessRate != null && (
-        <div className="mt-4 rounded-2xl border border-(--btn-border) p-5 bg-[linear-gradient(135deg,rgba(14,165,164,0.09),rgba(249,115,22,0.07))]">
+        <div className="mt-4 rounded-2xl border border-(--btn-border) bg-[linear-gradient(135deg,rgba(14,165,164,0.09),rgba(249,115,22,0.07))] p-4 sm:p-5">
           <div className="flex items-start justify-between gap-3">
             <p className="text-xs uppercase tracking-[0.16em] text-(--muted)">
               Rekomendacja składki
@@ -569,7 +569,7 @@ export default function SimulationEditor({
         animate={false}
       />
 
-      <div className="mt-4 rounded-2xl border border-(--btn-border) p-5 bg-[linear-gradient(135deg,rgba(59,130,246,0.10),rgba(14,165,164,0.08))]">
+      <div className="mt-4 rounded-2xl border border-(--btn-border) bg-[linear-gradient(135deg,rgba(59,130,246,0.10),rgba(14,165,164,0.08))] p-4 sm:p-5">
         <div className="flex items-start justify-between gap-3">
           <p className="text-xs uppercase tracking-[0.16em] text-(--muted)">
             Twoja składka
@@ -640,11 +640,11 @@ export default function SimulationEditor({
   });
 
   return (
-    <div className="w-full max-w-5xl mx-auto p-6">
+    <div className="mx-auto w-full max-w-5xl min-w-0 px-3 py-4 sm:p-6">
       {/* --- Dirty indicator --- */}
       {isDirty && (
         <div
-          className="mb-4 rounded-lg border p-3 text-sm flex items-start gap-2"
+          className="mb-4 flex items-start gap-2 rounded-lg border p-3 text-sm"
           style={{
             background: "rgba(245, 158, 11, 0.08)",
             borderColor: "rgba(245, 158, 11, 0.3)",
@@ -662,10 +662,13 @@ export default function SimulationEditor({
       )}
 
       {/* --- Card --- */}
-      <Card className="w-full">
+      <Card
+        className="w-full min-w-0"
+        styles={{ body: { padding: "clamp(12px, 3vw, 24px)" } }}
+      >
         <div className="flex flex-col gap-1">
           {/* --- Header --- */}
-          <div className="flex justify-between items-center mb-4 gap-4">
+          <div className="mb-4 flex flex-col items-stretch justify-between gap-3 sm:flex-row sm:items-center sm:gap-4">
             <Button
               icon={<ArrowLeftOutlined />}
               onClick={handleBackClick}
@@ -678,7 +681,7 @@ export default function SimulationEditor({
               type="button"
               onClick={handleSaveClick}
               disabled={isSaving || isRecomputing}
-              className="cursor-pointer inline-flex items-center justify-center gap-2 px-5 py-2 rounded-lg text-sm font-semibold transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400/50 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white shadow-md shadow-blue-600/20 hover:shadow-lg hover:shadow-blue-600/30 disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap h-10"
+              className="inline-flex h-10 w-full cursor-pointer items-center justify-center gap-2 whitespace-nowrap rounded-lg bg-blue-600 px-5 py-2 text-sm font-semibold text-white shadow-md shadow-blue-600/20 transition-all duration-200 hover:bg-blue-700 hover:shadow-lg hover:shadow-blue-600/30 active:bg-blue-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400/50 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
             >
               <CloudUploadOutlined style={{ fontSize: 15 }} />
               {isSaving ? "Zapisywanie..." : "Zapisz zmiany"}
@@ -701,18 +704,18 @@ export default function SimulationEditor({
           </div>
 
           {isRecomputing ? (
-            <div className="mt-6 rounded-2xl border border-(--btn-border) overflow-hidden bg-[radial-gradient(circle_at_18%_18%,rgba(14,165,164,0.14),transparent_42%),radial-gradient(circle_at_82%_8%,rgba(249,115,22,0.12),transparent_38%),linear-gradient(135deg,var(--card),var(--bg))] pointer-events-none">
-              <div className="p-6 md:p-8">
-                <div className="flex items-center justify-between gap-4 mb-3">
+            <div className="pointer-events-none mt-6 overflow-hidden rounded-2xl border border-(--btn-border) bg-[radial-gradient(circle_at_18%_18%,rgba(14,165,164,0.14),transparent_42%),radial-gradient(circle_at_82%_8%,rgba(249,115,22,0.12),transparent_38%),linear-gradient(135deg,var(--card),var(--bg))]">
+              <div className="p-4 sm:p-6 md:p-8">
+                <div className="mb-3 flex items-start justify-between gap-3">
                   <div>
                     <p className="text-xs uppercase tracking-[0.18em] text-(--muted)">
                       Symulacja Monte Carlo
                     </p>
-                    <h3 className="text-xl md:text-2xl font-semibold mt-1">
+                    <h3 className="mt-1 text-lg font-semibold sm:text-xl md:text-2xl">
                       Przeliczamy Twoje nowe prognozy
                     </h3>
                   </div>
-                  <div className="h-11 w-11 rounded-full border-2 border-(--btn-border) border-t-(--accent) animate-spin" />
+                  <div className="hidden h-11 w-11 rounded-full border-2 border-(--btn-border) border-t-(--accent) animate-spin sm:block" />
                 </div>
 
                 <div className="mt-0">
@@ -735,7 +738,9 @@ export default function SimulationEditor({
           ) : (
             <div className="mt-6">
               {tabItems.length > 1 ? (
-                <Tabs items={tabItems} />
+                <div className="min-w-0 overflow-hidden">
+                  <Tabs items={tabItems} />
+                </div>
               ) : (
                 recommendationContent
               )}

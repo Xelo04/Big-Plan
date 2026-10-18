@@ -54,7 +54,7 @@ export default function PortfolioAssetsList({
         return (
           <article
             key={asset.id}
-            className="w-full rounded-xl border border-(--btn-border) p-4"
+            className="w-full min-w-0 rounded-xl border border-(--btn-border) p-3 sm:p-4"
             style={{
               background: "var(--card-background)",
               boxShadow: "var(--card-shadow)",
@@ -65,7 +65,7 @@ export default function PortfolioAssetsList({
               {/* Left: name + ticker + category */}
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2 flex-wrap">
-                  <h3 className="text-lg font-semibold text-(--text) truncate">
+                  <h3 className="break-words text-lg font-semibold text-(--text)">
                     {asset.name}
                   </h3>
                   {asset.ticker && (
@@ -96,7 +96,7 @@ export default function PortfolioAssetsList({
                       asset.category}
                   </span>
                 </div>
-                <p className="text-xs text-(--muted) mt-1">
+                <p className="mt-1 break-words text-xs text-(--muted)">
                   {formatQuantity(asset.quantity)} szt. ·{" "}
                   {formatAmount(asset.averagePrice)} {asset.currency} zakup ·{" "}
                   {formatAmount(asset.currentPrice)} {asset.currency} obecnie
@@ -119,11 +119,11 @@ export default function PortfolioAssetsList({
               </div>
 
               {/* Right: actions */}
-              <div className="flex gap-2 shrink-0">
+              <div className="flex w-full gap-2 sm:w-auto">
                 <button
                   type="button"
                   onClick={() => onEdit(asset)}
-                  className="cursor-pointer inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium border border-(--btn-border) text-(--text) hover:bg-blue-500/10 hover:border-blue-500/40 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+                  className="inline-flex min-w-0 flex-1 cursor-pointer items-center justify-center gap-2 rounded-lg border border-(--btn-border) px-3 py-2 text-xs font-medium text-(--text) transition-colors hover:border-blue-500/40 hover:bg-blue-500/10 hover:text-blue-600 dark:hover:text-blue-400 sm:flex-none sm:py-1.5"
                 >
                   <EditOutlined />
                   Edytuj
@@ -132,7 +132,7 @@ export default function PortfolioAssetsList({
                   type="button"
                   onClick={() => onDelete(asset)}
                   disabled={deletingId === asset.id}
-                  className="cursor-pointer inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium border border-red-500/30 text-red-500 hover:bg-red-500/10 hover:border-red-500/60 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="inline-flex min-w-0 flex-1 cursor-pointer items-center justify-center gap-2 rounded-lg border border-red-500/30 px-3 py-2 text-xs font-medium text-red-500 transition-colors hover:border-red-500/60 hover:bg-red-500/10 disabled:cursor-not-allowed disabled:opacity-50 sm:flex-none sm:py-1.5"
                 >
                   <DeleteOutlined />
                   {deletingId === asset.id ? "Usuwanie..." : "Usuń"}

@@ -34,7 +34,7 @@ export default function SimulationNominalTab({
       />
 
       {(calibratedMonthlyPayment != null || simulationSuccessRate != null) && (
-        <div className="mt-4 rounded-2xl border border-(--btn-border) p-5 bg-[linear-gradient(135deg,rgba(14,165,164,0.09),rgba(249,115,22,0.07))]">
+        <div className="mt-4 rounded-2xl border border-(--btn-border) bg-[linear-gradient(135deg,rgba(14,165,164,0.09),rgba(249,115,22,0.07))] p-4 sm:p-5">
           <div className="flex items-start justify-between gap-3">
             <p className="text-xs uppercase tracking-[0.16em] text-(--muted)">
               Rekomendacja składki

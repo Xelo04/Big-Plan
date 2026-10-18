@@ -44,7 +44,7 @@ export async function handlePostAuth(
     const data = (await res.json()) as { error?: string };
 
     if (!res.ok) {
-      // Limit 3 symulacji — user musi usunąć starą
+      // Limit 1 symulacji — user musi usunąć starą
       if (res.status === 403) {
         notification.warning({
           title: "Nie zapisano symulacji",

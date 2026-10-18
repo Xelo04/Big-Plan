@@ -233,10 +233,10 @@ const SimulationComparisonChart = memo(function SimulationComparisonChart({
   }, [combinedChartData]);
 
   return (
-    <div className="rounded-lg border border-(--btn-border) p-4">
-      <div className="flex items-center justify-between mb-3 pr-6">
+    <div className="min-w-0 rounded-lg border border-(--btn-border) p-2.5 sm:p-4">
+      <div className="mb-3 flex items-start justify-between gap-3 sm:items-center sm:pr-6">
         <div className="flex flex-col gap-0.5">
-          <p className="font-semibold text-(--text)">
+          <p className="text-sm font-semibold text-(--text) sm:text-base">
             Porównanie wszystkich symulacji
           </p>
           <p className="text-xs text-(--muted)">
@@ -253,7 +253,7 @@ const SimulationComparisonChart = memo(function SimulationComparisonChart({
           />
         </Tooltip>
       </div>
-      <div className="h-80 w-full" style={{ position: "relative" }}>
+      <div className="h-64 w-full min-w-0 sm:h-80" style={{ position: "relative" }}>
         <ResponsiveContainer
           width="100%"
           height="100%"
@@ -262,7 +262,7 @@ const SimulationComparisonChart = memo(function SimulationComparisonChart({
         >
           <LineChart
             data={combinedChartData}
-            margin={{ top: 14, right: 20, left: 6, bottom: 2 }}
+            margin={{ top: 10, right: 4, left: 0, bottom: 2 }}
           >
             <CartesianGrid
               strokeDasharray="3 3"
@@ -273,7 +273,7 @@ const SimulationComparisonChart = memo(function SimulationComparisonChart({
             <XAxis
               dataKey="label"
               type="category"
-              tick={{ fontSize: 12, fill: "var(--text)" }}
+              tick={{ fontSize: 10, fill: "var(--text)" }}
               tickLine={{ stroke: "rgba(148,163,184,0.65)" }}
               axisLine={{ stroke: "rgba(148,163,184,0.65)" }}
               interval="preserveStartEnd"
@@ -281,7 +281,7 @@ const SimulationComparisonChart = memo(function SimulationComparisonChart({
             />
             <YAxis
               tickFormatter={(value) => formatAmount(Number(value))}
-              tick={{ fontSize: 12, fill: "var(--text)" }}
+              tick={{ fontSize: 10, fill: "var(--text)" }}
               tickLine={{ stroke: "rgba(148,163,184,0.65)" }}
               axisLine={{ stroke: "rgba(148,163,184,0.65)" }}
               allowDecimals={false}

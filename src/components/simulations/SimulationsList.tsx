@@ -12,7 +12,7 @@ import SimulationCard from "./SimulationCard";
 import { useNotify } from "../notifications/NotificationProvider";
 import type { SavedSimulationDTO } from "@/src/lib/simulation/simulation-types";
 
-const MAX_SIMULATIONS = 3;
+const MAX_SIMULATIONS = 1;
 
 export default function SimulationsList({
   initialSimulations,
@@ -90,8 +90,8 @@ export default function SimulationsList({
             {simulations.length === 0
               ? "Nie masz jeszcze zapisanych symulacji."
               : simulations.length === MAX_SIMULATIONS
-                ? `Wykorzystałeś wszystkie ${MAX_SIMULATIONS} miejsca na symulacje.`
-                : `Wykorzystano ${simulations.length} z ${MAX_SIMULATIONS} miejsc na symulacje.`}
+                ? "Wykorzystałeś jedyne miejsce na symulację."
+                : `Wykorzystano ${simulations.length} z ${MAX_SIMULATIONS} miejsca na symulację.`}
           </p>
         </div>
 

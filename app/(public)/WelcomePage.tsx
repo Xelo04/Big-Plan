@@ -27,7 +27,7 @@ export default function WelcomePage() {
     <div className="w-full overflow-x-hidden">
       {/*  HERO SECTION                                */}
       <section
-        className="relative min-h-[calc(100vh-73px)] flex items-center justify-center overflow-hidden pb-12"
+        className="relative flex min-h-[calc(100svh-73px)] items-center justify-center overflow-hidden pb-8 sm:pb-12"
         style={{
           background: `
             radial-gradient(circle at 20% 30%, rgba(59,130,246,0.15), transparent 40%),
@@ -38,31 +38,31 @@ export default function WelcomePage() {
       >
         <StarField />
 
-        <div className="relative z-10 w-full max-w-7xl mx-auto px-6 grid grid-cols-1 lg:grid-cols-2 gap-8 items-center py-10 lg:py-0 mt-[-5vh]">
+        <div className="relative z-10 grid w-full max-w-7xl grid-cols-1 items-center gap-4 px-4 py-8 sm:gap-8 sm:px-6 sm:py-10 lg:mx-auto lg:grid-cols-2 lg:py-0 lg:mt-[-5vh]">
           {/* LEFT: Tekst */}
-          <div className="flex flex-col gap-6 text-center lg:text-left">
-            <h1 className="text-4xl md:text-6xl font-bold leading-[1.1] tracking-tight text-(--text)">
-              Odzyskaj kontrolę nad{" "}
+          <div className="flex flex-col gap-5 text-center sm:gap-6 lg:text-left">
+            <h1 className="text-3xl font-bold leading-[1.1] tracking-tight text-(--text) sm:text-4xl md:text-6xl">
+              Zaplanuj swoją{" "}
               <span
                 className="inline-block bg-clip-text text-transparent bg-linear-to-r from-blue-600 via-blue-400 to-blue-600 animate-shimmer"
                 style={{ backgroundSize: "200% 100%" }}
               >
-                swoją przyszłością
+                wolność finansową
               </span>
             </h1>
 
-            <p className="text-base md:text-lg text-(--muted) max-w-xl mx-auto lg:mx-0 leading-relaxed">
-              Zbuduj kompleksowy plan emerytalny oparty o rynkowe realia.
-              Przeanalizuj 10 000 scenariuszy symulacji Monte Carlo, śledź swój
-              prawdziwy portfel aktywów i optymalizuj go dzięki wbudowanemu
-              silnikowi rebalancingu.
+            <p className="mx-auto max-w-xl text-sm leading-relaxed text-(--muted) sm:text-base md:text-lg lg:mx-0">
+              Zaprojektuj spersonalizowany plan FIRE oparty na twardych danych.
+              Zobacz, jak Twój portfel poradzi sobie w 10 000 historycznych
+              scenariuszach giełdowych i utrzymaj właściwą alokację aktywów
+              dzięki wbudowanemu silnikowi rebalancingu.
             </p>
 
             <div className="flex flex-col sm:flex-row gap-3 justify-center lg:justify-start mt-2">
               <button
                 type="button"
                 onClick={() => router.push("/sign-up")}
-                className="cursor-pointer inline-flex items-center justify-center gap-2 px-8 py-4 rounded-xl text-base font-semibold bg-linear-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 text-white shadow-xl shadow-blue-500/30 hover:shadow-2xl hover:shadow-blue-500/40 transition-all hover:scale-[1.02]"
+                className="inline-flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl bg-linear-to-r from-blue-600 to-blue-500 px-6 py-3.5 text-sm font-semibold text-white shadow-xl shadow-blue-500/30 transition-all hover:from-blue-700 hover:to-blue-600 hover:shadow-2xl hover:shadow-blue-500/40 sm:w-auto sm:px-8 sm:py-4 sm:text-base sm:hover:scale-[1.02]"
               >
                 Rozpocznij planowanie
                 <ArrowRightOutlined />
@@ -71,7 +71,7 @@ export default function WelcomePage() {
               <button
                 type="button"
                 onClick={() => router.push("/calculator")}
-                className="cursor-pointer inline-flex items-center justify-center gap-2 px-8 py-4 rounded-xl text-base font-semibold border-2 border-(--btn-border) text-(--text) hover:border-(--text)/40 backdrop-blur-sm bg-(--card-background) transition-all"
+                className="inline-flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl border-2 border-(--btn-border) bg-(--card-background) px-6 py-3.5 text-sm font-semibold text-(--text) backdrop-blur-sm transition-all hover:border-(--text)/40 sm:w-auto sm:px-8 sm:py-4 sm:text-base"
               >
                 Kalkulator bez logowania
               </button>
@@ -79,7 +79,7 @@ export default function WelcomePage() {
           </div>
 
           {/* RIGHT: Floating UI Mockup */}
-          <div className="relative h-100 md:h-125 lg:h-137.5 w-full flex items-center justify-center lg:pl-10">
+          <div className="relative hidden h-85 w-full items-center justify-center sm:h-100 md:flex md:h-125 lg:h-137.5 lg:pl-10">
             <HeroVisual />
           </div>
         </div>
@@ -102,13 +102,13 @@ export default function WelcomePage() {
       </section>
 
       {/* Sekcja z krokami */}
-      <section className="relative py-24 md:py-32 px-6">
+      <section className="relative px-4 py-16 sm:px-6 sm:py-24 md:py-32">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16">
             <p className="text-xs uppercase tracking-[0.2em] text-blue-500 font-semibold mb-3">
               Krok po Kroku
             </p>
-            <h2 className="text-4xl md:text-5xl font-bold text-(--text) mb-4">
+            <h2 className="mb-4 text-3xl font-bold text-(--text) sm:text-4xl md:text-5xl">
               Od pomysłu do niezależności
             </h2>
             <p className="text-base text-(--muted) max-w-2xl mx-auto">
@@ -135,7 +135,7 @@ export default function WelcomePage() {
                   />
                 ),
                 title: "Oszacuj prawdopodobieństwo",
-                desc: "Nasz symulator sprawdzi 10 000 wariantów historycznych, podając Ci precyzyjną kwotę jaką musisz odkładać.",
+                desc: "Nasz symulator przeanalizuje 10 000 wariantów historycznych i wskaże szacowaną kwotę, jaką warto odkładać, aby osiągnąć cel.",
               },
               {
                 num: "03",
@@ -167,13 +167,13 @@ export default function WelcomePage() {
       </section>
 
       {/*  FEATURES */}
-      <section className="relative py-24 md:py-32 px-6 bg-[linear-gradient(135deg,var(--bg),var(--card-background))]">
+      <section className="relative bg-[linear-gradient(135deg,var(--bg),var(--card-background))] px-4 py-16 sm:px-6 sm:py-24 md:py-32">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16">
             <p className="text-xs uppercase tracking-[0.2em] text-blue-500 font-semibold mb-3">
               Możliwości Big Plan
             </p>
-            <h2 className="text-4xl md:text-5xl font-bold text-(--text) mb-4">
+            <h2 className="mb-4 text-3xl font-bold text-(--text) sm:text-4xl md:text-5xl">
               Zaprojektowany dla świadomych inwestorów.
             </h2>
           </div>
@@ -183,17 +183,17 @@ export default function WelcomePage() {
               {
                 icon: <LineChartOutlined />,
                 title: "Silnik Monte Carlo",
-                desc: "Oparty o faktyczne wahania giełdy, generuje bezpieczny scenariusz dla Twoich inwestycji.",
+                desc: "Oparty o faktyczne wahania giełdy, generuje realistyczny scenariusz dla Twoich inwestycji.",
               },
               {
                 icon: <DollarOutlined />,
                 title: "Rzeczywiste notowania",
-                desc: "Notowania z giełdy odświeżane automatycznie przez Yahoo Finance.",
+                desc: "Notowania z giełdy aktualizowane automatycznie z Yahoo Finance po wejściu do portfela.",
               },
               {
                 icon: <SafetyOutlined />,
                 title: "Narzędzie Rebalancingu",
-                desc: "Nigdy nie rozbij swojej alokacji ryzyka. Big Plan poinformuje Cię, co musisz sprzedać i kupić by wrócić do celu.",
+                desc: "Utrzymuj przyjęty poziom ryzyka. Big Plan wskaże jak i kiedy dokonać korekty alokacji, aby przywrócić pierwotne proporcje.",
               },
               {
                 icon: <GlobalOutlined />,
@@ -203,7 +203,7 @@ export default function WelcomePage() {
               {
                 icon: <CloudOutlined />,
                 title: "W pełni online",
-                desc: "Twoje symulacje zapisywane są bezpiecznie na platformie. Zarządzaj planami skądkolwiek zechcesz.",
+                desc: "Twoje symulacje zapisywane są bezpiecznie na platformie. Zarządzaj planami z dowolnego urządzenia.",
               },
               {
                 icon: <RocketOutlined />,
@@ -246,10 +246,10 @@ export default function WelcomePage() {
       </section>
 
       {/*  FINAL CTA                                   */}
-      <section className="relative py-24 md:py-32 px-6">
+      <section className="relative px-4 py-16 sm:px-6 sm:py-24 md:py-32">
         <div className="relative max-w-4xl mx-auto">
           <div
-            className="relative overflow-hidden rounded-3xl border border-(--btn-border) p-10 md:p-16 text-center bg-(--card-background)"
+            className="relative overflow-hidden rounded-3xl border border-(--btn-border) bg-(--card-background) p-6 text-center sm:p-10 md:p-16"
             style={{
               boxShadow: "0 30px 60px -20px rgba(59, 130, 246, 0.25)",
             }}
@@ -266,22 +266,25 @@ export default function WelcomePage() {
             />
 
             <div className="relative z-10">
-              <h2 className="text-4xl md:text-6xl font-bold text-(--text) mb-6 leading-tight">
-                Pieniądze przestaną być zagadką.
-                <br />
+              <h2 className="mb-6 text-3xl font-bold leading-tight text-(--text) sm:text-4xl md:text-6xl">
+                Zamień{" "}
                 <span className="inline-block bg-clip-text text-transparent bg-linear-to-r from-blue-600 via-blue-400 to-blue-600">
-                  Zaplanuj je już dziś.
+                  chaos
+                </span>{" "}
+                w portfelu na{" "}
+                <span className="inline-block bg-clip-text text-transparent bg-linear-to-r from-blue-600 via-blue-400 to-blue-600">
+                  jasną strategię
                 </span>
               </h2>
               <p className="text-base md:text-lg text-(--muted) mb-10 max-w-2xl mx-auto">
-                Załóż darmowe konto i przenieś zarządzanie domowymi
-                oszczędnościami na instytucjonalny poziom z Big Plan.
+                Buduj trwały majątek na własnych zasadach i śledź postępy w
+                drodze do Twojej wolności finansowej.
               </p>
 
               <button
                 type="button"
                 onClick={() => router.push("/sign-up")}
-                className="cursor-pointer inline-flex items-center justify-center gap-3 px-10 py-5 rounded-xl text-lg font-semibold bg-linear-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 text-white shadow-2xl shadow-blue-500/30 hover:shadow-blue-500/50 transition-all hover:scale-[1.02]"
+                className="inline-flex w-full cursor-pointer items-center justify-center gap-3 rounded-xl bg-linear-to-r from-blue-600 to-blue-500 px-6 py-4 text-base font-semibold text-white shadow-2xl shadow-blue-500/30 transition-all hover:from-blue-700 hover:to-blue-600 hover:shadow-blue-500/50 sm:w-auto sm:px-10 sm:py-5 sm:text-lg sm:hover:scale-[1.02]"
               >
                 Załóż darmowe konto
                 <ArrowRightOutlined />

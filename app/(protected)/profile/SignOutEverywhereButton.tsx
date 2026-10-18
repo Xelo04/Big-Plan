@@ -48,7 +48,7 @@ export default function SignOutEverywhereButton() {
   if (loading) return <LoadingPage />;
 
   return (
-    <section>
+    <section className="w-full sm:w-auto">
       <Button
         type="default"
         onClick={handleLogoutEverywhere}
@@ -58,19 +58,28 @@ export default function SignOutEverywhereButton() {
             style={{ color: "var(--danger-text)", fontSize: 15 }}
           />
         }
+        className="btn-rounded-custom !h-auto !min-h-14 w-full whitespace-normal text-center sm:w-auto"
         style={{
           borderRadius: 9,
           color: "var(--danger-text)",
           border: "1px solid var(--danger-border)",
           background: "var(--danger-bg)",
-          padding: "8px 12px",
-          display: "inline-flex",
+          height: "auto",
+          minHeight: 56,
+          padding: "12px 16px",
+          display: "flex",
           alignItems: "center",
+          justifyContent: "center",
           gap: 8,
+          lineHeight: 1.35,
+          minWidth: 0,
+          whiteSpace: "normal",
+          overflow: "visible",
         }}
-        className="btn-rounded-custom"
       >
-        Wyloguj się ze wszystkich urządzeń
+        <span className="block min-w-0 whitespace-normal break-words text-center">
+          Wyloguj się ze wszystkich urządzeń
+        </span>
       </Button>
     </section>
   );
