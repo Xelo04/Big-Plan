@@ -7,6 +7,7 @@ import {
   getVerificationEmailHtml,
   getResetPasswordEmailHtml,
 } from "../email/email-templates";
+import { deleteUserData } from "../db/supabase";
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL || process.env.DIRECT_URL,
@@ -44,6 +45,12 @@ export const auth = betterAuth({
     },
   },
   user: {
+    deleteUser: {
+      enabled: true,
+      beforeDelete: async (user) => {
+        await deleteUserData(user.id);
+      },
+    },
     additionalFields: {
       role: { type: "string", input: false },
       subscriptionPlan: { type: "string", input: false },

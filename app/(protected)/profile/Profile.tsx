@@ -13,6 +13,7 @@ import {
 import { User } from "@/src/lib/auth/auth";
 import ChangePasswordForm from "./ChangePasswordForm";
 import SignOutEverywhereButton from "./SignOutEverywhereButton";
+import DeleteAccountButton from "./DeleteAccountButton";
 
 const { Title, Text } = Typography;
 
@@ -184,6 +185,8 @@ export default function Profile({ user }: { user: User }) {
                 </Button>
 
                 <SignOutEverywhereButton />
+
+                <DeleteAccountButton />
               </div>
             </div>
           </div>
