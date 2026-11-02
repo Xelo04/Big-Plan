@@ -1,3 +1,26 @@
+const logoUrl = "https://bigplan.pl/logo.png";
+
+function getLogoMarkup() {
+  return `
+    <table role="presentation" cellspacing="0" cellpadding="0" style="margin: 0 auto;">
+      <tr>
+        <td style="vertical-align: middle; padding-right: 10px;">
+          <img
+            src="${logoUrl}"
+            alt="Big Plan"
+            width="42"
+            height="42"
+            style="display: block; width: 42px; height: 42px; border: 0;"
+          >
+        </td>
+        <td style="vertical-align: middle; color: #ffffff; font-size: 26px; line-height: 42px; font-weight: 800; letter-spacing: -0.5px; white-space: nowrap;">
+          Big Plan
+        </td>
+      </tr>
+    </table>
+  `;
+}
+
 /**
  * Szablon e-maila weryfikującego konto
  */
@@ -28,7 +51,7 @@ export function getVerificationEmailHtml({
           <!-- Logo / Header -->
           <tr>
             <td align="center" style="padding-bottom: 24px;">
-              <span style="font-size: 26px; font-weight: 800; color: #ffffff; letter-spacing: -0.5px;">Big Plan</span>
+              ${getLogoMarkup()}
             </td>
           </tr>
 
@@ -109,7 +132,7 @@ export function getResetPasswordEmailHtml({
           <!-- Logo / Header -->
           <tr>
             <td align="center" style="padding-bottom: 24px;">
-              <span style="font-size: 26px; font-weight: 800; color: #ffffff; letter-spacing: -0.5px;">Big Plan</span>
+              ${getLogoMarkup()}
             </td>
           </tr>
 
@@ -186,7 +209,7 @@ export function getPasswordChangedEmailHtml({
         <table role="presentation" width="100%" style="max-width: 520px; background-color: #131b2e; border: 1px solid #1e293b; border-radius: 16px; padding: 36px 32px;">
           <tr>
             <td align="center" style="padding-bottom: 24px;">
-              <span style="font-size: 26px; font-weight: 800; color: #ffffff; letter-spacing: -0.5px;">Big Plan</span>
+              ${getLogoMarkup()}
             </td>
           </tr>
           <tr>
