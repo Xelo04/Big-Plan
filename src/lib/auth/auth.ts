@@ -91,7 +91,7 @@ export const auth = betterAuth({
     }),
   },
   trustedOrigins: [
-    "http://localhost:3000",
+    "https://bigplan.pl",
     process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, ""),
   ].filter(Boolean) as string[],
 });
