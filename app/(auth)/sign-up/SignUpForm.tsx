@@ -78,11 +78,16 @@ export default function SignUpPage() {
         }
 
         // Wyślij email weryfikacyjny
-        await fetch("/api/user/email", {
+        const emailResponse = await fetch("/api/user/email", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ email: values.email }),
+          signal: AbortSignal.timeout(10000),
         });
+
+        if (!emailResponse.ok) {
+          throw new Error("Nie udało się przygotować weryfikacji e-maila.");
+        }
 
         router.push("/verify-email");
       }
