@@ -12,9 +12,8 @@ import {
   Divider,
   Space,
   Checkbox,
-  Alert,
 } from "antd";
-import { GoogleOutlined, InfoCircleOutlined } from "@ant-design/icons";
+import { GoogleOutlined } from "@ant-design/icons";
 import { getErrorMessage } from "@/src/lib/utils/error-utils";
 import { loadPendingSimulation } from "@/src/lib/simulation/pending-simulation";
 

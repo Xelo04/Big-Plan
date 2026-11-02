@@ -62,7 +62,9 @@ export default function SignInPage() {
           });
 
           if (!emailResponse.ok) {
-            throw new Error("Nie udało się przygotować ponownej weryfikacji e-maila.");
+            throw new Error(
+              "Nie udało się przygotować ponownej weryfikacji e-maila.",
+            );
           }
 
           router.push("/verify-email");
