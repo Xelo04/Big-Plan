@@ -159,3 +159,57 @@ export function getResetPasswordEmailHtml({
 </html>
   `;
 }
+
+/**
+ * Szablon potwierdzenia zmiany hasła
+ */
+export function getPasswordChangedEmailHtml({
+  userName,
+}: {
+  userName?: string | null;
+}) {
+  const year = new Date().getFullYear();
+  const greeting = userName ? `Cześć ${userName}!` : "Cześć!";
+
+  return `
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Hasło zostało zmienione</title>
+</head>
+<body style="margin: 0; padding: 0; background-color: #0b0f19; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: #e2e8f0;">
+  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color: #0b0f19; padding: 40px 20px;">
+    <tr>
+      <td align="center">
+        <table role="presentation" width="100%" style="max-width: 520px; background-color: #131b2e; border: 1px solid #1e293b; border-radius: 16px; padding: 36px 32px;">
+          <tr>
+            <td align="center" style="padding-bottom: 24px;">
+              <span style="font-size: 26px; font-weight: 800; color: #ffffff; letter-spacing: -0.5px;">Big Plan</span>
+            </td>
+          </tr>
+          <tr>
+            <td style="border-top: 1px solid #1e293b; padding-top: 28px;">
+              <h1 style="font-size: 20px; font-weight: 600; color: #ffffff; margin: 0 0 14px 0; text-align: center;">Hasło zostało zmienione</h1>
+              <p style="font-size: 14px; line-height: 1.6; color: #94a3b8; margin: 0; text-align: center;">
+                ${greeting} Hasło do Twojego konta Big Plan zostało właśnie zmienione.
+              </p>
+            </td>
+          </tr>
+          <tr>
+            <td style="border-top: 1px solid #1e293b; padding-top: 20px;">
+              <p style="font-size: 12px; color: #64748b; margin: 0; text-align: center;">
+                Jeśli to nie Ty zmieniałeś hasło, skontaktuj się z administratorem.<br>
+                &copy; ${year} Big Plan. Wszystkie prawa zastrzeżone.
+              </p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>
+  `;
+}

@@ -22,7 +22,7 @@ export default function VerifyEmail({ email }: VerifyEmailProps) {
     try {
       const { error } = await authClient.sendVerificationEmail({
         email,
-        callbackURL: "/email-verified",
+        callbackURL: `${process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, "") ?? window.location.origin}/email-verified`,
       });
 
       if (error) {

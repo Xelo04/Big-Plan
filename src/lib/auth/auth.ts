@@ -6,6 +6,7 @@ import { sendEmail } from "../email/email";
 import {
   getVerificationEmailHtml,
   getResetPasswordEmailHtml,
+  getPasswordChangedEmailHtml,
 } from "../email/email-templates";
 import { deleteUserData } from "../db/supabase";
 
@@ -30,6 +31,13 @@ export const auth = betterAuth({
         to: user.email,
         subject: "Resetowanie hasła - Big Plan",
         html: getResetPasswordEmailHtml({ url, userName: user.name }),
+      });
+    },
+    async onPasswordReset({ user }) {
+      await sendEmail({
+        to: user.email,
+        subject: "Hasło zostało zmienione - Big Plan",
+        html: getPasswordChangedEmailHtml({ userName: user.name }),
       });
     },
   },
@@ -84,7 +92,7 @@ export const auth = betterAuth({
   },
   trustedOrigins: [
     "http://localhost:3000",
-    process.env.NEXT_PUBLIC_APP_URL,
+    process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, ""),
   ].filter(Boolean) as string[],
 });
 

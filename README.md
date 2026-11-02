@@ -56,9 +56,13 @@ Wymagane jest Node.js oraz skonfigurowany projekt Supabase i dostawca Google OAu
    NEXT_PUBLIC_APP_URL=http://localhost:3000
 
    RESEND_API_KEY=...
+   RESEND_FROM_EMAIL=no-reply@mail.bigplan.pl
    ```
 
    `SUPABASE_SERVICE_ROLE_KEY` jest używany wyłącznie po stronie serwera i nie może być udostępniany w kodzie klienta.
+   `RESEND_FROM_EMAIL` musi należeć do zweryfikowanej domeny w Resend. W środowisku produkcyjnym ustaw
+   `NEXT_PUBLIC_APP_URL` i `BETTER_AUTH_URL` na `https://bigplan.pl` oraz dodaj te same zmienne w ustawieniach
+   środowiska Netlify.
 
 3. Uruchom serwer deweloperski:
 

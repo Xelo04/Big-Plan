@@ -22,7 +22,7 @@ export default function ForgotPasswordForm() {
     try {
       const { error } = await authClient.requestPasswordReset({
         email,
-        redirectTo: "/reset-password",
+        redirectTo: `${process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, "") ?? window.location.origin}/reset-password`,
       });
 
       if (error) {

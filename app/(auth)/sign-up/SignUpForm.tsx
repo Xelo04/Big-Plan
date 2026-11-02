@@ -42,7 +42,7 @@ export default function SignUpPage() {
         email: values.email,
         password: values.password,
         wants_newsletter: values.wants_newsletter,
-        callbackURL: "/dashboard",
+        callbackURL: `${process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, "") ?? window.location.origin}/dashboard`,
       });
 
       if (error) {
@@ -149,30 +149,6 @@ export default function SignUpPage() {
             Rejestracja
           </Title>
         </header>
-
-        {/* --- BANER INFORMACYJNY O TESTACH --- */}
-        <Alert
-          type="warning"
-          showIcon
-          icon={<InfoCircleOutlined />}
-          style={{ marginBottom: 24 }}
-          description={
-            <div className="text-xs text-(--text) leading-relaxed mt-1">
-              <p className="mb-2">
-                Obecnie serwis jest w fazie testów. Jeśli rejestrujesz się za
-                pomocą <strong>adresu e-mail</strong>, po założeniu konta musisz
-                wysłać wiadomość z prośbą o aktywację na adres:
-              </p>
-              <div className="font-mono bg-black/20 p-1.5 rounded text-center text-blue-400 font-semibold mb-2 select-all">
-                kontakt.bigplan@gmail.com
-              </div>
-              <p className="text-(--muted)">
-                <strong>Zachęcamy do rejestracji przez konto Google</strong> –
-                nie wymaga ona ręcznej aktywacji i konto jest gotowe od razu!
-              </p>
-            </div>
-          }
-        />
 
         <Form form={form} layout="vertical" onFinish={handleSubmit}>
           <Form.Item
