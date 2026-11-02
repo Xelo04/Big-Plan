@@ -56,7 +56,7 @@ Wymagane jest Node.js oraz skonfigurowany projekt Supabase i dostawca Google OAu
    NEXT_PUBLIC_APP_URL=http://localhost:3000
 
    RESEND_API_KEY=...
-   RESEND_FROM_EMAIL=no-reply@mail.bigplan.pl
+   RESEND_FROM_EMAIL=...
    ```
 
    `SUPABASE_SERVICE_ROLE_KEY` jest używany wyłącznie po stronie serwera i nie może być udostępniany w kodzie klienta.
