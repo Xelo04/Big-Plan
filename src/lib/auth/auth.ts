@@ -15,12 +15,18 @@ const databaseCaCert = process.env.DATABASE_CA_CERT?.replace(
   "\n",
 ).trim();
 
+const sslConfig = databaseCaCert
+  ? {
+      ca: databaseCaCert,
+      rejectUnauthorized: true,
+    }
+  : process.env.NODE_ENV === "production"
+    ? { rejectUnauthorized: false }
+    : false;
+
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL || process.env.DIRECT_URL,
-  ssl: {
-    rejectUnauthorized: true,
-    ...(databaseCaCert ? { ca: databaseCaCert } : {}),
-  },
+  ssl: sslConfig,
 });
 
 export const auth = betterAuth({
