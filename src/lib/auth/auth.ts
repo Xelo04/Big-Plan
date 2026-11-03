@@ -16,16 +16,25 @@ const databaseCaCert = caBase64
   ? Buffer.from(caBase64, "base64").toString("utf-8")
   : undefined;
 
+const decodedCaCert = databaseCaCert
+  ? Buffer.from(databaseCaCert, "base64").toString("utf8").trim()
+  : undefined;
+
+if (
+  process.env.NODE_ENV === "production" &&
+  (!decodedCaCert ||
+    !decodedCaCert.includes("-----BEGIN CERTIFICATE-----") ||
+    !decodedCaCert.includes("-----END CERTIFICATE-----"))
+) {
+  throw new Error("DATABASE_CA_CERT nie jest poprawnym certyfikatem PEM");
+}
+
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL || process.env.DIRECT_URL,
-  ssl: databaseCaCert
-    ? {
-        ca: databaseCaCert,
-        rejectUnauthorized: true,
-      }
-    : process.env.NODE_ENV === "production"
-      ? { rejectUnauthorized: true }
-      : false,
+  ssl: {
+    ca: decodedCaCert,
+    rejectUnauthorized: true,
+  },
 });
 
 export const auth = betterAuth({
