@@ -10,23 +10,22 @@ import {
 } from "../email/email-templates";
 import { deleteUserData } from "../db/supabase";
 
-const databaseCaCert = process.env.DATABASE_CA_CERT?.replace(
-  /\\n/g,
-  "\n",
-).trim();
-
-const sslConfig = databaseCaCert
-  ? {
-      ca: databaseCaCert,
-      rejectUnauthorized: true,
-    }
-  : process.env.NODE_ENV === "production"
-    ? { rejectUnauthorized: false }
-    : false;
+// Bezpieczne odkodowanie certyfikatu CA z Base64
+const caBase64 = process.env.DATABASE_CA_CERT;
+const databaseCaCert = caBase64
+  ? Buffer.from(caBase64, "base64").toString("utf-8")
+  : undefined;
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL || process.env.DIRECT_URL,
-  ssl: sslConfig,
+  ssl: databaseCaCert
+    ? {
+        ca: databaseCaCert,
+        rejectUnauthorized: true,
+      }
+    : process.env.NODE_ENV === "production"
+      ? { rejectUnauthorized: true }
+      : false,
 });
 
 export const auth = betterAuth({
