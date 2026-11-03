@@ -1,6 +1,5 @@
 import { betterAuth } from "better-auth";
 import { APIError, createAuthMiddleware } from "better-auth/api";
-import { rootCertificates } from "node:tls";
 import { Pool } from "pg";
 import { passwordSchema } from "../utils/validation";
 import { sendEmail } from "../email/email";
@@ -11,38 +10,12 @@ import {
 } from "../email/email-templates";
 import { deleteUserData } from "../db/supabase";
 
-const configuredCaCert = process.env.DATABASE_CA_CERT?.trim();
-const databaseCaCert = configuredCaCert
-  ? configuredCaCert.includes("-----BEGIN CERTIFICATE-----")
-    ? configuredCaCert.replace(/\\n/g, "\n").trim()
-    : Buffer.from(
-        configuredCaCert
-          .replace(/\s/g, "")
-          .replace(/-/g, "+")
-          .replace(/_/g, "/"),
-        "base64",
-      )
-        .toString("utf8")
-        .trim()
-  : undefined;
-
-if (
-  process.env.NODE_ENV === "production" &&
-  (!databaseCaCert ||
-    !databaseCaCert.includes("-----BEGIN CERTIFICATE-----") ||
-    !databaseCaCert.includes("-----END CERTIFICATE-----"))
-) {
-  throw new Error("DATABASE_CA_CERT nie jest poprawnym certyfikatem PEM");
-}
-
 const pool = new Pool({
-  connectionString: process.env.DATABASE_URL || process.env.DIRECT_URL,
-  ssl: {
-    ca: databaseCaCert
-      ? [...rootCertificates, databaseCaCert]
-      : [...rootCertificates],
-    rejectUnauthorized: true,
-  },
+  connectionString: process.env.DATABASE_URL,
+  ssl:
+    process.env.NODE_ENV === "production"
+      ? { rejectUnauthorized: false }
+      : false,
 });
 
 export const auth = betterAuth({
