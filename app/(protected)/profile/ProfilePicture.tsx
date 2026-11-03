@@ -19,7 +19,7 @@ export default function ProfilePicture({ user }: { user: User }) {
     const input = e.currentTarget;
     const file = input.files?.[0];
     if (!file) return;
-    if (!file.type.startsWith("image/")) {
+    if (!["image/jpeg", "image/png", "image/webp"].includes(file.type)) {
       notification.error({ title: "Proszę wybrać plik graficzny." });
       input.value = "";
       return;
@@ -105,7 +105,7 @@ export default function ProfilePicture({ user }: { user: User }) {
           <input
             ref={fileRef}
             type="file"
-            accept=".png, .jpg, .jpeg, .webp, .svg"
+            accept=".png, .jpg, .jpeg, .webp"
             onChange={handleFileChange}
             style={{ display: "none" }}
           />

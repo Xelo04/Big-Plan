@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import crypto from "crypto";
 import { getSession } from "@/src/lib/auth/get-session";
 import { getSupabaseAdmin } from "@/src/lib/db/supabase";
+import { hasValidOrigin } from "@/src/lib/utils/request";
 
 const MAX_BYTES = 20 * 1024 * 1024; // 20MB
 
@@ -9,14 +10,12 @@ const ALLOWED_MIMES = new Set([
   "image/jpeg",
   "image/png",
   "image/webp",
-  "image/svg+xml",
 ]);
 
 const MIME_TO_EXT: Record<string, string> = {
   "image/jpeg": "jpg",
   "image/png": "png",
   "image/webp": "webp",
-  "image/svg+xml": "svg",
 };
 
 function safeBasename(name?: string) {
@@ -33,6 +32,10 @@ function shortHash(len = 8) {
 
 export async function POST(req: Request) {
   try {
+    if (!hasValidOrigin(req)) {
+      return NextResponse.json({ error: "Niedozwolone źródło żądania." }, { status: 403 });
+    }
+
     const session = await getSession();
     if (!session?.user?.id) {
       return NextResponse.json(
@@ -50,6 +53,14 @@ export async function POST(req: Request) {
       );
     }
 
+    const contentLength = Number(req.headers.get("content-length"));
+    if (Number.isFinite(contentLength) && contentLength > MAX_BYTES + 1024 * 1024) {
+      return NextResponse.json(
+        { error: "Plik jest za duży. Maksymalny rozmiar to 20 MB." },
+        { status: 413 },
+      );
+    }
+
     const form = await req.formData();
     const file = form.get("file") as File | null;
     if (!file) {
@@ -63,7 +74,7 @@ export async function POST(req: Request) {
     if (!ALLOWED_MIMES.has(mime)) {
       return NextResponse.json(
         {
-          error: "Nieobsługiwany typ pliku. Dozwolone: jpg, png, webp, svg.",
+          error: "Nieobsługiwany typ pliku. Dozwolone: jpg, png, webp.",
         },
         { status: 400 },
       );

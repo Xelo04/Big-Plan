@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { getSession } from "@/src/lib/auth/get-session";
 import { getSupabaseAdmin, newId } from "@/src/lib/db/supabase";
+import { exceedsBodyLimit, hasValidOrigin } from "@/src/lib/utils/request";
 
 const createAssetSchema = z.object({
   name: z.string().trim().min(1).max(120),
@@ -20,6 +21,17 @@ export async function POST(
   { params }: { params: Promise<{ simulationId: string }> },
 ) {
   try {
+    if (!hasValidOrigin(req)) {
+      return NextResponse.json({ error: "Niedozwolone źródło żądania." }, { status: 403 });
+    }
+
+    if (exceedsBodyLimit(req)) {
+      return NextResponse.json(
+        { error: "Żądanie jest zbyt duże." },
+        { status: 413 },
+      );
+    }
+
     const session = await getSession();
     if (!session?.user?.id) {
       return NextResponse.json({ error: "Brak sesji." }, { status: 401 });

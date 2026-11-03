@@ -111,6 +111,8 @@ Przykładowy `.env.local`:
 DATABASE_URL=postgresql://...
 # Opcjonalny fallback, używany gdy DATABASE_URL nie jest ustawiony
 DIRECT_URL=postgresql://...
+# Opcjonalny certyfikat CA PostgreSQL, jeśli dostawca go wymaga
+DATABASE_CA_CERT="-----BEGIN CERTIFICATE-----..."
 
 # Supabase server-side
 SUPABASE_URL=https://<projekt>.supabase.co
@@ -134,6 +136,7 @@ RESEND_FROM_EMAIL=...
 | --------------------------- | ------------------: | --------------------------------------------------------------------------------------------- |
 | `DATABASE_URL`              |                 tak | połączenie better-auth z PostgreSQL                                                           |
 | `DIRECT_URL`                |           warunkowo | alternatywa dla `DATABASE_URL`                                                                |
+| `DATABASE_CA_CERT`          |           zalecana | certyfikat CA używany do weryfikacji TLS PostgreSQL                                            |
 | `SUPABASE_URL`              |                 tak | URL instancji Supabase                                                                        |
 | `SUPABASE_SERVICE_ROLE_KEY` |                 tak | serwerowy dostęp do tabel i Storage                                                           |
 | `GOOGLE_CLIENT_ID`          |          dla Google | identyfikator OAuth                                                                           |
@@ -143,10 +146,14 @@ RESEND_FROM_EMAIL=...
 | `RESEND_FROM_EMAIL`         | tak dla auth e-mail | zweryfikowany adres `from`                                                                    |
 
 `SUPABASE_SERVICE_ROLE_KEY`, `DATABASE_URL`, `DIRECT_URL`,
-`GOOGLE_CLIENT_SECRET` i `RESEND_API_KEY` są sekretami. Nie dodawaj ich do
+`DATABASE_CA_CERT`, `GOOGLE_CLIENT_SECRET` i `RESEND_API_KEY` są sekretami. Nie dodawaj ich do
 repozytorium, logów, screenshotów ani zmiennych z prefiksem
 `NEXT_PUBLIC_`. W produkcji `RESEND_FROM_EMAIL` musi należeć do zweryfikowanej
 domeny w Resend.
+
+Połączenie PostgreSQL wymaga weryfikacji certyfikatu TLS. Nie ustawiaj
+`rejectUnauthorized=false`; jeśli dostawca używa prywatnego CA, ustaw
+`DATABASE_CA_CERT` na pełny certyfikat CA.
 
 ### Integracje OAuth i e-mail
 

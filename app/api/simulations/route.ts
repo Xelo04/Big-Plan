@@ -2,12 +2,13 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { getSession } from "@/src/lib/auth/get-session";
 import { getSupabaseAdmin, newId } from "@/src/lib/db/supabase";
+import { exceedsBodyLimit, hasValidOrigin } from "@/src/lib/utils/request";
 
 const MAX_SIMULATIONS_PER_USER = 1;
 const MAX_NAME_LENGTH = 80;
 
 const percentilePointSchema = z.object({
-  label: z.string(),
+  label: z.string().trim().min(1).max(80),
   p5: z.number(),
   p25: z.number(),
   p50: z.number(),
@@ -31,9 +32,9 @@ const createSimulationSchema = z.object({
   recommendedMonthlyPayment: z.number().min(0),
   simulationSuccessRate: z.number().min(0).max(1),
   userSimulationSuccessRate: z.number().min(0).max(1).optional().nullable(),
-  recommendedChartPercentiles: z.array(percentilePointSchema).min(1),
-  userChartPercentiles: z.array(percentilePointSchema).optional().nullable(),
-  totalSimulations: z.number().int().min(1).optional(),
+  recommendedChartPercentiles: z.array(percentilePointSchema).min(1).max(1000),
+  userChartPercentiles: z.array(percentilePointSchema).max(1000).optional().nullable(),
+  totalSimulations: z.number().int().min(1).max(1_000_000).optional(),
 });
 
 export async function GET() {
@@ -72,6 +73,17 @@ export async function GET() {
 
 export async function POST(req: Request) {
   try {
+    if (!hasValidOrigin(req)) {
+      return NextResponse.json({ error: "Niedozwolone źródło żądania." }, { status: 403 });
+    }
+
+    if (exceedsBodyLimit(req)) {
+      return NextResponse.json(
+        { error: "Żądanie jest zbyt duże." },
+        { status: 413 },
+      );
+    }
+
     const session = await getSession();
     if (!session?.user?.id) {
       return NextResponse.json(
@@ -164,6 +176,10 @@ export async function POST(req: Request) {
 
 export async function DELETE(req: Request) {
   try {
+    if (!hasValidOrigin(req)) {
+      return NextResponse.json({ error: "Niedozwolone źródło żądania." }, { status: 403 });
+    }
+
     const session = await getSession();
     if (!session?.user?.id) {
       return NextResponse.json(

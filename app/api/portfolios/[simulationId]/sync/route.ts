@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import YahooFinance from "yahoo-finance2";
 import { getSession } from "@/src/lib/auth/get-session";
 import { getSupabaseAdmin } from "@/src/lib/db/supabase";
+import { hasValidOrigin } from "@/src/lib/utils/request";
 
 type YahooQuote = {
   symbol?: string;
@@ -11,10 +12,14 @@ type YahooQuote = {
 const yahooFinance = new YahooFinance();
 
 export async function POST(
-  _req: Request,
+  req: Request,
   { params }: { params: Promise<{ simulationId: string }> },
 ) {
   try {
+    if (!hasValidOrigin(req)) {
+      return NextResponse.json({ error: "Niedozwolone źródło żądania." }, { status: 403 });
+    }
+
     const session = await getSession();
     if (!session?.user?.id) {
       return NextResponse.json({ error: "Brak sesji" }, { status: 401 });
