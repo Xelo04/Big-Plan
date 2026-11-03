@@ -10,16 +10,17 @@ import {
 } from "../email/email-templates";
 import { deleteUserData } from "../db/supabase";
 
+const databaseCaCert = process.env.DATABASE_CA_CERT?.replace(
+  /\\n/g,
+  "\n",
+).trim();
+
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL || process.env.DIRECT_URL,
-  ssl: process.env.DATABASE_CA_CERT
-    ? {
-        rejectUnauthorized: true,
-        ca: process.env.DATABASE_CA_CERT,
-      }
-    : {
-        rejectUnauthorized: true,
-      },
+  ssl: {
+    rejectUnauthorized: true,
+    ...(databaseCaCert ? { ca: databaseCaCert } : {}),
+  },
 });
 
 export const auth = betterAuth({
