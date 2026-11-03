@@ -10,21 +10,26 @@ import {
 } from "../email/email-templates";
 import { deleteUserData } from "../db/supabase";
 
-// Bezpieczne odkodowanie certyfikatu CA z Base64
-const caBase64 = process.env.DATABASE_CA_CERT;
-const databaseCaCert = caBase64
-  ? Buffer.from(caBase64, "base64").toString("utf-8")
-  : undefined;
-
-const decodedCaCert = databaseCaCert
-  ? Buffer.from(databaseCaCert, "base64").toString("utf8").trim()
+const configuredCaCert = process.env.DATABASE_CA_CERT?.trim();
+const databaseCaCert = configuredCaCert
+  ? configuredCaCert.includes("-----BEGIN CERTIFICATE-----")
+    ? configuredCaCert.replace(/\\n/g, "\n").trim()
+    : Buffer.from(
+        configuredCaCert
+          .replace(/\s/g, "")
+          .replace(/-/g, "+")
+          .replace(/_/g, "/"),
+        "base64",
+      )
+        .toString("utf8")
+        .trim()
   : undefined;
 
 if (
   process.env.NODE_ENV === "production" &&
-  (!decodedCaCert ||
-    !decodedCaCert.includes("-----BEGIN CERTIFICATE-----") ||
-    !decodedCaCert.includes("-----END CERTIFICATE-----"))
+  (!databaseCaCert ||
+    !databaseCaCert.includes("-----BEGIN CERTIFICATE-----") ||
+    !databaseCaCert.includes("-----END CERTIFICATE-----"))
 ) {
   throw new Error("DATABASE_CA_CERT nie jest poprawnym certyfikatem PEM");
 }
@@ -32,7 +37,7 @@ if (
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL || process.env.DIRECT_URL,
   ssl: {
-    ca: decodedCaCert,
+    ca: databaseCaCert,
     rejectUnauthorized: true,
   },
 });
