@@ -1,5 +1,6 @@
 import { betterAuth } from "better-auth";
 import { APIError, createAuthMiddleware } from "better-auth/api";
+import { rootCertificates } from "node:tls";
 import { Pool } from "pg";
 import { passwordSchema } from "../utils/validation";
 import { sendEmail } from "../email/email";
@@ -37,7 +38,9 @@ if (
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL || process.env.DIRECT_URL,
   ssl: {
-    ca: databaseCaCert,
+    ca: databaseCaCert
+      ? [...rootCertificates, databaseCaCert]
+      : [...rootCertificates],
     rejectUnauthorized: true,
   },
 });
